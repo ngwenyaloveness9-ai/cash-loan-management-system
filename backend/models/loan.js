@@ -2,21 +2,45 @@ const db = require('../config/db');
 
 const Loan = {
   // ======================
-  // Create loan
+  // Create loan (WITH CALCULATIONS)
   // ======================
   create: async (loan) => {
+    const loanAmount = Number(loan.loan_amount);
+
+    // 30% interest
+    const interestRate = 30;
+
+    // repayment period rule
+    const repaymentPeriod = loanAmount < 2000 ? 3 : 6;
+
+    // total payable = amount + 30%
+    const totalPayable = loanAmount + (loanAmount * interestRate / 100);
+
+    // initial balance = total payable
+    const loanBalance = totalPayable;
+
     const sql = `
       INSERT INTO loans 
-      (user_id, branch_id, loan_amount, interest_rate, repayment_period)
-      VALUES (?, ?, ?, ?, ?)
+      (
+        user_id,
+        branch_id,
+        loan_amount,
+        interest_rate,
+        repayment_period,
+        total_payable,
+        loan_balance
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const [result] = await db.promise().query(sql, [
+    const [result] = await db.query(sql, [
       loan.user_id,
       loan.branch_id,
-      loan.loan_amount,
-      loan.interest_rate,
-      loan.repayment_period
+      loanAmount,
+      interestRate,
+      repaymentPeriod,
+      totalPayable,
+      loanBalance
     ]);
 
     return result.insertId;
@@ -26,12 +50,14 @@ const Loan = {
   // Get all loans
   // ======================
   getAll: async () => {
-    const [rows] = await db.promise().query(`
+    const [rows] = await db.query(`
       SELECT 
         l.loan_id,
         l.loan_amount,
         l.interest_rate,
         l.repayment_period,
+        l.total_payable,
+        l.loan_balance,
         l.loan_status,
         l.created_at,
         u.full_name,
@@ -48,18 +74,30 @@ const Loan = {
   // Get loans by user
   // ======================
   getByUserId: async (user_id) => {
-    const [rows] = await db.promise().query(
-      `SELECT * FROM loans WHERE user_id = ?`,
+    const [rows] = await db.query(
+      `
+      SELECT 
+        loan_id,
+        loan_amount,
+        interest_rate,
+        repayment_period,
+        total_payable,
+        loan_balance,
+        loan_status,
+        created_at
+      FROM loans
+      WHERE user_id = ?
+      `,
       [user_id]
     );
     return rows;
   },
 
   // ======================
-  // Update loan status (existing)
+  // Update loan status
   // ======================
   updateStatus: async (loanId, status, approvedBy) => {
-    await db.promise().query(
+    await db.query(
       `
       UPDATE loans
       SET loan_status = ?, approved_by = ?
@@ -70,16 +108,59 @@ const Loan = {
   },
 
   // ======================
-  // 🔥 STEP 5 — Review loan
+  // Review loan
   // ======================
   reviewLoan: async (loanId, status, reviewedBy) => {
-    await db.promise().query(
+    await db.query(
       `
       UPDATE loans
       SET loan_status = ?, approved_by = ?
       WHERE loan_id = ?
       `,
       [status, reviewedBy, loanId]
+    );
+  },
+
+  // ======================
+  // APPLY PAYMENT (SAFE VERSION)
+  // ======================
+  applyPayment: async (loanId, amountPaid) => {
+    const [rows] = await db.query(
+      `
+      SELECT loan_balance, loan_status 
+      FROM loans 
+      WHERE loan_id = ?
+      `,
+      [loanId]
+    );
+
+    if (!rows.length) {
+      throw new Error('Loan not found');
+    }
+
+    // ❌ Prevent payment if loan not approved
+    if (rows[0].loan_status !== 'approved') {
+      throw new Error('Payments are only allowed on approved loans');
+    }
+
+    // ❌ Prevent over-payment
+    if (amountPaid > rows[0].loan_balance) {
+      throw new Error('Payment exceeds remaining loan balance');
+    }
+
+    const newBalance = rows[0].loan_balance - amountPaid;
+
+    await db.query(
+      `
+      UPDATE loans
+      SET loan_balance = ?, loan_status = ?
+      WHERE loan_id = ?
+      `,
+      [
+        newBalance <= 0 ? 0 : newBalance,
+        newBalance <= 0 ? 'closed' : 'approved',
+        loanId
+      ]
     );
   }
 };

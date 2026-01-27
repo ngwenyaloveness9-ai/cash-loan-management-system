@@ -1,19 +1,25 @@
 const express = require('express');
 const router = express.Router();
 
-const auth = require('../middlewares/authMiddleware');
-const upload = require('../middlewares/uploadMiddleware');
-const controller = require('../controllers/documentController');
+const documentController = require('../controllers/documentController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const uploadDocuments = require('../middlewares/uploadMiddleware');
 
+// ================= UPLOAD DOCUMENTS =================
+// POST /api/loans/:loanId/documents
 router.post(
-  '/:loanId',
-  auth,
-  upload.fields([
-    { name: 'id', maxCount: 1 },
-    { name: 'payslip', maxCount: 1 },
-    { name: 'bank_statement', maxCount: 1 }
-  ]),
-  controller.uploadDocuments
+  '/loans/:loanId/documents',
+  authMiddleware,
+  uploadDocuments,
+  documentController.uploadDocuments
+);
+
+// ================= GET DOCUMENTS =================
+// GET /api/loans/:loanId/documents
+router.get(
+  '/loans/:loanId/documents',
+  authMiddleware,
+  documentController.getDocumentsByLoan
 );
 
 module.exports = router;

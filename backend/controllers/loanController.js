@@ -5,23 +5,36 @@ const Loan = require('../models/loan');
 // ======================
 exports.applyLoan = async (req, res) => {
   try {
-    const { loan_amount, interest_rate, repayment_period } = req.body;
+    const { loan_amount } = req.body;
 
-    if (!loan_amount || !repayment_period) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!loan_amount) {
+      return res.status(400).json({ error: 'Loan amount is required' });
     }
+
+    const amount = Number(loan_amount);
+
+    // 🔢 BUSINESS RULES
+    const interest_rate = 30; // 30%
+    const repayment_period = amount < 2000 ? 3 : 6;
+
+    const total_payable = amount + (amount * 0.30);
+    const remaining_balance = total_payable;
 
     const loanId = await Loan.create({
       user_id: req.user.user_id,
       branch_id: req.user.branch_id,
-      loan_amount,
+      loan_amount: amount,
       interest_rate,
-      repayment_period
+      repayment_period,
+      total_payable,
+      remaining_balance
     });
 
     res.status(201).json({
       message: 'Loan application submitted',
-      loan_id: loanId
+      loan_id: loanId,
+      total_payable,
+      repayment_period
     });
 
   } catch (error) {
@@ -98,7 +111,7 @@ exports.rejectLoan = async (req, res) => {
 };
 
 // ======================
-// 🔥 STEP 5 — Review loan
+// Review loan (unchanged)
 // ======================
 exports.reviewLoan = async (req, res) => {
   try {

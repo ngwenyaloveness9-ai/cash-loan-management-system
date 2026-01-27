@@ -7,8 +7,8 @@ const Document = {
       VALUES (?, ?, ?)
     `;
 
-    const [result] = await db.promise().query(sql, [
-      loan_id,
+    const [result] = await db.query(sql, [
+      Number(loan_id),
       document_type,
       file_path
     ]);
@@ -17,10 +17,11 @@ const Document = {
   },
 
   getByLoanId: async (loan_id) => {
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       'SELECT * FROM loan_documents WHERE loan_id = ?',
-      [loan_id]
+      [Number(loan_id)]
     );
+
     return rows;
   }
 };

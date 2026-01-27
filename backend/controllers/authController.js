@@ -1,52 +1,60 @@
+const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // ⚠️ keep filename lowercase to avoid casing errors
 
+// ================= REGISTER =================
+exports.register = async (req, res) => {
+  try {
+    const { full_name, email, password, role, branch_id } = req.body;
+
+    if (!full_name || !email || !password || !role || !branch_id) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const [existing] = await db.query(
+      'SELECT user_id FROM users WHERE email = ?',
+      [email]
+    );
+
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.query(
+      `INSERT INTO users (full_name, email, password, role, branch_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      [full_name, email, hashedPassword, role, branch_id]
+    );
+
+    res.status(201).json({ message: 'User registered successfully' });
+
+  } catch (error) {
+    console.error('REGISTER ERROR:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// ================= LOGIN =================
 exports.login = async (req, res) => {
   try {
-    // 🔍 DEBUG: log request body
-    console.log('REQ BODY:', req.body);
-
     const { email, password } = req.body;
 
-    // 1️⃣ Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        error: 'Email and password are required'
-      });
+    const [rows] = await db.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // 2️⃣ Find user by email
-    const user = await User.findByEmail(email);
+    const user = rows[0];
 
-    if (!user) {
-      return res.status(404).json({
-        error: 'User not found'
-      });
-    }
-
-    // 3️⃣ Check if account is blocked
-    if (user.status === 'blocked') {
-      return res.status(403).json({
-        error: 'Account is blocked'
-      });
-    }
-
-    // 4️⃣ Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
-      return res.status(401).json({
-        error: 'Invalid credentials'
-      });
-    }
-
-    // 5️⃣ Generate JWT
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET is missing in .env');
-      return res.status(500).json({
-        error: 'Server configuration error'
-      });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const token = jwt.sign(
@@ -59,9 +67,7 @@ exports.login = async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    // 6️⃣ Success response
-    return res.status(200).json({
-      message: 'Login successful',
+    res.json({
       token,
       user: {
         user_id: user.user_id,
@@ -73,12 +79,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    // 🚨 FULL ERROR LOGGING
-    console.error('LOGIN ERROR MESSAGE:', error.message);
-    console.error('LOGIN ERROR STACK:', error.stack);
-
-    return res.status(500).json({
-      error: 'Server error'
-    });
+    console.error('LOGIN ERROR:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };

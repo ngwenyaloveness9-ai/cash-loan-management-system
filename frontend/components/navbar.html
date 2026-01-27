@@ -1,0 +1,18 @@
+<nav class="navbar">
+  <h2>Cash Loan Management System</h2>
+
+  <ul>
+    <li><a href="borrower-dashboard.html">Dashboard</a></li>
+    <li><a href="apply-loan.html">Apply Loan</a></li>
+    <li><a href="payments.html">Payments</a></li>
+    <li><a href="reports.html">Reports</a></li>
+    <li><button onclick="logout()">Logout</button></li>
+  </ul>
+</nav>
+
+<script>
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+</script>

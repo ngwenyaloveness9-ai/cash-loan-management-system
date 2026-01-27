@@ -1,49 +1,42 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
-// =================== MIDDLEWARE ===================
 app.use(cors());
-app.use(express.json());
 
-// =================== HOME ROUTE ===================
+/**
+ * ✅ IMPORTANT FIX
+ * Only parse JSON if request is NOT multipart/form-data
+ * This prevents hanging requests when using multer
+ */
+app.use((req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    return next();
+  }
+  express.json()(req, res, next);
+});
+
+// ✅ Serve uploaded files (THIS WAS MISSING BEFORE)
+app.use('/api', require('./routes/documentRoutes'));
+
+
 app.get('/', (req, res) => {
   res.send('Cash Loan Management System API is running');
 });
 
-// =================== ROUTES ===================
+// ROUTES
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/branches', require('./routes/branchRoutes'));
+app.use('/api/loans', require('./routes/loanRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/documents', require('./routes/documentRoutes'));
 
-// Auth routes
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
-
-// User routes
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
-
-// Branch routes
-const branchRoutes = require('./routes/branchRoutes');
-app.use('/api/branches', branchRoutes);
-
-// Loan routes
-const loanRoutes = require('./routes/loanRoutes');
-app.use('/api/loans', loanRoutes);
-
-// Payment routes
-const paymentRoutes = require('./routes/paymentRoutes');
-app.use('/api/payments', paymentRoutes);
-
-// Report routes
-const reportRoutes = require('./routes/reportRoutes');
-app.use('/api/reports', reportRoutes);
-
-// 🔥 DOCUMENT UPLOAD / REGISTER ROUTES
-const documentRoutes = require('./routes/documentRoutes');
-app.use('/api/documents', documentRoutes);
-
-// =================== 404 HANDLER ===================
+// ❌ MUST BE LAST
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });

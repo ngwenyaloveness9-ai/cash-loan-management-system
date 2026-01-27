@@ -1,12 +1,15 @@
-const Branch = require('../models/Branch');
+const db = require('../config/db');
 
-exports.getAllBranches = (req, res) => {
-  Branch.getAll((err, results) => {
-    if (err) {
-      console.error('BRANCH ERROR:', err);
-      return res.status(500).json({ error: 'Failed to fetch branches' });
-    }
+exports.getAllBranches = async (req, res) => {
+  try {
+    const [branches] = await db.query(
+      'SELECT branch_id, branch_name FROM branches ORDER BY branch_name'
+    );
 
-    res.json(results);
-  });
+    res.json(branches);
+
+  } catch (error) {
+    console.error('GET BRANCHES ERROR:', error);
+    res.status(500).json({ error: 'Failed to fetch branches' });
+  }
 };

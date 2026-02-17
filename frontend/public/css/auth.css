@@ -1,40 +1,77 @@
-.auth-wrapper {
+/* PAGE CENTERING */
+.auth-page {
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  padding: 20px;
 }
 
-.auth-box {
-  background: white;
-  padding: 40px;
+/* GLASS CONTAINER */
+.auth-glass {
   width: 380px;
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  padding: 40px;
+
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
 }
 
-.auth-box h2 {
+/* TITLE */
+.auth-title {
   text-align: center;
+  color: white;
   margin-bottom: 25px;
-  color: var(--primary-green);
-}
-
-.auth-box label {
-  display: block;
-  margin-bottom: 6px;
   font-weight: 600;
 }
 
-.auth-box input,
-.auth-box select {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 18px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+/* LABELS */
+.auth-glass label {
+  color: white;
+  font-weight: 500;
+  margin-top: 10px;
 }
 
+/* INPUT SPACING */
+.auth-glass input,
+.auth-glass select {
+  margin-bottom: 12px;
+}
+
+/* BUTTON */
+.auth-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #0f3d91, #0a7f5a);
+  color: white;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.auth-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* FOOTER LINK */
 .auth-footer {
   text-align: center;
   margin-top: 15px;
+  color: rgba(255,255,255,0.8);
+}
+
+.auth-footer a {
+  color: #4fc3f7;
+  text-decoration: none;
 }

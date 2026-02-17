@@ -3,15 +3,28 @@ const router = express.Router();
 
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
+const userController = require('../controllers/userController');
 
-// Admin-only test route
+// ================= ADMIN: GET ALL USERS =================
 router.get(
   '/',
   authMiddleware,
   roleMiddleware('admin'),
-  (req, res) => {
-    res.json({ message: 'Users route is working' });
-  }
+  userController.getAllUsers
+);
+
+// ================= GET MY PROFILE =================
+router.get(
+  '/me',
+  authMiddleware,
+  userController.getMyProfile
+);
+
+// ================= UPDATE MY PROFILE =================
+router.put(
+  '/me',
+  authMiddleware,
+  userController.updateMyProfile
 );
 
 module.exports = router;

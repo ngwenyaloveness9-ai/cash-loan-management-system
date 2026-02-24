@@ -1,11 +1,6 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://localhost:5000/api/reports';
 
-// ================= LOAD PDF LIBRARY =================
-const script = document.createElement('script');
-script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-document.head.appendChild(script);
-
-// ================= AUTH HEADER =================
+// ================= AUTH HEADERS =================
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
   return {
@@ -14,139 +9,171 @@ function getAuthHeaders() {
   };
 }
 
-// ================= FORM SUBMIT =================
-document.getElementById('filterForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  loadReports();
+// ================= DOM =================
+const reportPeriod = document.getElementById('reportPeriod');
+const fromDate = document.getElementById('fromDate');
+const toDate = document.getElementById('toDate');
+const reportSelect = document.getElementById('reportSelect');
+const reportContainer = document.getElementById('reportContainer');
+const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+// ================= PERIOD HANDLER =================
+reportPeriod.addEventListener('change', () => {
+  const period = reportPeriod.value;
+  const today = new Date();
+  let start, end;
+
+  switch (period) {
+    case 'today':
+      start = end = today;
+      break;
+
+    case 'weekly':
+      start = new Date();
+      start.setDate(today.getDate() - 7);
+      end = today;
+      break;
+
+    case 'monthly':
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = today;
+      break;
+
+    case 'yearly':
+      start = new Date(today.getFullYear(), 0, 1);
+      end = today;
+      break;
+
+    case 'custom':
+      fromDate.disabled = false;
+      toDate.disabled = false;
+      return;
+  }
+
+  fromDate.value = formatDate(start);
+  toDate.value = formatDate(end);
+  fromDate.disabled = true;
+  toDate.disabled = true;
+
+  loadReport();
 });
 
-// ================= LOAD REPORTS =================
-async function loadReports() {
-  await loadSummary();
-  await loadBranchRevenue();
-  await loadClosedLoans();
-}
+// ================= LOAD REPORT =================
+async function loadReport() {
+  const reportName = reportSelect.value;
+  const period = reportPeriod.value;
+  const from = fromDate.value;
+  const to = toDate.value;
 
-// ================= SUMMARY =================
-async function loadSummary() {
-  const res = await fetch(`${API_BASE}/reports/summary`, {
-    headers: getAuthHeaders()
-  });
+  if (!from || !to) {
+    reportContainer.innerHTML =
+      '<p class="text-center text-muted">Select valid dates.</p>';
+    return;
+  }
 
-  const data = await res.json();
-  const list = document.getElementById('summaryList');
-  list.innerHTML = '';
+  reportContainer.innerHTML =
+    '<p class="text-center text-muted">Loading report...</p>';
 
-  for (const key in data) {
-    const li = document.createElement('li');
-    li.textContent = `${key.replace(/_/g, ' ')}: ${data[key]}`;
-    list.appendChild(li);
+  try {
+    const url =
+      `${API_BASE}/${reportName}?period=${period}&fromDate=${from}&toDate=${to}`;
+
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      reportContainer.innerHTML =
+        '<p class="text-center text-muted">No data found.</p>';
+      return;
+    }
+
+    renderReport(reportName, data);
+
+  } catch (err) {
+    console.error(err);
+    reportContainer.innerHTML =
+      '<p class="text-danger text-center">Failed to load report.</p>';
   }
 }
 
-// ================= BRANCH REVENUE =================
-async function loadBranchRevenue() {
-  const res = await fetch(`${API_BASE}/reports/branch-revenue`, {
-    headers: getAuthHeaders()
+// ================= RENDER =================
+function renderReport(name, data) {
+
+  // ===== BRANCH REVENUE PIE CHART =====
+  if (name === 'branch-revenue') {
+    renderPieChart(data);
+    return;
+  }
+
+  let html = `
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+          <tr>
+  `;
+
+  const columns = Object.keys(data[0]);
+
+  columns.forEach(col => {
+    html += `<th>${col.replace(/_/g, ' ')}</th>`;
   });
 
-  const data = await res.json();
-  const table = document.getElementById('branchRevenueTable');
-  table.innerHTML = '';
+  html += '</tr></thead><tbody>';
 
   data.forEach(row => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${row.branch_name}</td>
-      <td>${row.total_loans}</td>
-      <td>${row.revenue}</td>
-    `;
-    table.appendChild(tr);
+    html += '<tr>';
+    columns.forEach(col => {
+      html += `<td>${row[col]}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  reportContainer.innerHTML = html;
+}
+
+// ================= PIE CHART =================
+function renderPieChart(data) {
+
+  reportContainer.innerHTML = `
+    <canvas id="revenueChart"></canvas>
+  `;
+
+  const ctx = document.getElementById('revenueChart');
+
+  const labels = data.map(item => item.branch_name);
+  const values = data.map(item => item.revenue);
+
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values
+      }]
+    }
   });
 }
 
-// ================= CLOSED LOANS =================
-async function loadClosedLoans() {
-  const res = await fetch(`${API_BASE}/reports/closed-loans`, {
-    headers: getAuthHeaders()
-  });
-
-  const data = await res.json();
-  const table = document.getElementById('closedLoansTable');
-  table.innerHTML = '';
-
-  data.forEach(row => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${row.loan_id}</td>
-      <td>${row.full_name}</td>
-      <td>${row.branch_name}</td>
-      <td>${row.loan_amount}</td>
-    `;
-    table.appendChild(tr);
-  });
-}
-
-// ================= PDF EXPORT =================
-document.getElementById('exportPdfBtn').addEventListener('click', () => {
+// ================= EXPORT PDF =================
+exportPdfBtn.addEventListener('click', () => {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
-  let y = 10;
-
-  pdf.setFontSize(16);
-  pdf.text('Cash Loan Management System Report', 10, y);
-  y += 10;
-
-  // SUMMARY
-  pdf.setFontSize(14);
-  pdf.text('Summary', 10, y);
-  y += 8;
-
-  document.querySelectorAll('#summaryList li').forEach(li => {
-    pdf.setFontSize(11);
-    pdf.text(li.textContent, 12, y);
-    y += 6;
-  });
-
-  y += 6;
-
-  // BRANCH REVENUE
-  pdf.setFontSize(14);
-  pdf.text('Branch Revenue', 10, y);
-  y += 8;
-
-  document.querySelectorAll('#branchRevenueTable tr').forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length) {
-      pdf.setFontSize(11);
-      pdf.text(
-        `${cells[0].textContent} | Loans: ${cells[1].textContent} | Revenue: ${cells[2].textContent}`,
-        12,
-        y
-      );
-      y += 6;
-    }
-  });
-
-  y += 6;
-
-  // CLOSED LOANS
-  pdf.setFontSize(14);
-  pdf.text('Closed Loans', 10, y);
-  y += 8;
-
-  document.querySelectorAll('#closedLoansTable tr').forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length) {
-      pdf.setFontSize(11);
-      pdf.text(
-        `Loan #${cells[0].textContent} | ${cells[1].textContent} | ${cells[2].textContent} | ${cells[3].textContent}`,
-        12,
-        y
-      );
-      y += 6;
-    }
-  });
-
-  pdf.save('loan-reports.pdf');
+  pdf.text("Cash Loan Report", 10, 10);
+  pdf.text(reportContainer.innerText, 10, 20);
+  pdf.save(`${reportSelect.value}-report.pdf`);
 });
+
+// ================= HELPERS =================
+function formatDate(d) {
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${d.getFullYear()}-${month}-${day}`;
+}
+
+// ================= INIT =================
+reportSelect.addEventListener('change', loadReport);
+fromDate.addEventListener('change', loadReport);
+toDate.addEventListener('change', loadReport);
+reportPeriod.dispatchEvent(new Event('change'));

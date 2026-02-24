@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
     userAvatar.textContent = formatted.initials;
   }
 
+  // ================= LOAD OFFICER PROFILE =================
+  const officerName = document.getElementById('officerName');
+  const officerEmail = document.getElementById('officerEmail');
+  const officerBranch = document.getElementById('officerBranch');
+  const officerRole = document.getElementById('officerRole');
+
+  if (officerName && officerEmail && officerBranch && officerRole) {
+    officerName.textContent = user.full_name || '—';
+    officerEmail.textContent = user.email || '—';
+    officerBranch.textContent = user.branch_name || '—';
+    officerRole.textContent = user.role || '—';
+  }
+
   // ================= LOAD LOANS =================
   if (user.role === 'borrower') loadMyLoans(token);
   else if (user.role === 'officer' || user.role === 'admin') loadLoanApplications(token);
@@ -42,14 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleBtn = document.getElementById('sidebarToggle');
   const overlay = document.getElementById('overlay');
 
-  toggleBtn.addEventListener('click', () => {
+  toggleBtn?.addEventListener('click', () => {
     const isCollapsed = sidebar.classList.contains('collapsed');
     sidebar.classList.toggle('collapsed', !isCollapsed);
     main.classList.toggle('sidebar-collapsed', !isCollapsed);
     overlay.classList.toggle('active', !isCollapsed);
   });
 
-  overlay.addEventListener('click', () => {
+  overlay?.addEventListener('click', () => {
     sidebar.classList.add('collapsed');
     main.classList.add('sidebar-collapsed');
     overlay.classList.remove('active');
@@ -67,12 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadMyLoans(token) {
     const tableBody = document.getElementById('loansTableBody');
     if (!tableBody) return;
+
     tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Loading loans...</td></tr>';
 
     try {
-      const res = await fetch(`${API_BASE}/loans`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/loans`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       const loans = await res.json();
       tableBody.innerHTML = '';
+
       if (!loans.length) {
         tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No loans found</td></tr>';
         return;
@@ -83,7 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPayable = Number(loan.total_payable);
         const remainingBalance = Number(loan.loan_balance);
         const repaymentMonths = loan.repayment_period;
-        const monthlyInstallment = repaymentMonths ? (totalPayable / repaymentMonths).toFixed(2) : '—';
+        const monthlyInstallment = repaymentMonths
+          ? (totalPayable / repaymentMonths).toFixed(2)
+          : '—';
+
         const isClosed = loan.loan_status === 'closed';
 
         const row = document.createElement('tr');
@@ -94,13 +115,17 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${isClosed ? 'R 0.00' : `R ${remainingBalance.toFixed(2)}`}</td>
           <td>${repaymentMonths}</td>
           <td>${repaymentMonths ? `R ${monthlyInstallment}` : '—'}</td>
-          <td class="status status-${loan.loan_status.toLowerCase()} text-capitalize fw-semibold">${loan.loan_status}</td>
+          <td class="status status-${loan.loan_status.toLowerCase()} text-capitalize fw-semibold">
+            ${loan.loan_status}
+          </td>
         `;
         tableBody.appendChild(row);
       });
+
     } catch (err) {
       console.error('BORROWER LOAN LOAD ERROR:', err);
-      tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load loans</td></tr>';
+      tableBody.innerHTML =
+        '<tr><td colspan="7" class="text-center text-danger">Failed to load loans</td></tr>';
     }
   }
 
@@ -109,13 +134,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableBody = document.getElementById('applicationsTableBody');
     if (!tableBody) return;
 
-    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading applications...</td></tr>';
+    tableBody.innerHTML =
+      '<tr><td colspan="6" class="text-center">Loading applications...</td></tr>';
+
     try {
-      const res = await fetch(`${API_BASE}/loans`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/loans`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       const loans = await res.json();
       tableBody.innerHTML = '';
+
       if (!loans.length) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No applications found</td></tr>';
+        tableBody.innerHTML =
+          '<tr><td colspan="6" class="text-center">No applications found</td></tr>';
         return;
       }
 
@@ -128,18 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${loan.branch_name}</td>
           <td>${loan.loan_status}</td>
           <td>
-            ${loan.loan_status === 'pending'
-              ? `<button class="btn btn-sm btn-info me-1" onclick="viewDocuments(${loan.loan_id})">View Docs</button>
-                 <button class="btn btn-sm btn-success me-1" onclick="approveLoan(${loan.loan_id})">Approve</button>
-                 <button class="btn btn-sm btn-danger" onclick="rejectLoan(${loan.loan_id})">Reject</button>`
-              : '<span class="text-muted">—</span>'}
+            ${
+              loan.loan_status === 'pending'
+                ? `<button class="btn btn-sm btn-info me-1" onclick="viewDocuments(${loan.loan_id})">View Docs</button>
+                   <button class="btn btn-sm btn-success me-1" onclick="approveLoan(${loan.loan_id})">Approve</button>
+                   <button class="btn btn-sm btn-danger" onclick="rejectLoan(${loan.loan_id})">Reject</button>`
+                : '<span class="text-muted">—</span>'
+            }
           </td>
         `;
         tableBody.appendChild(row);
       });
+
     } catch (err) {
       console.error('APPLICATION LOAD ERROR:', err);
-      tableBody.innerHTML = '<tr><td colspan="6" class="text-danger text-center">Failed to load applications</td></tr>';
+      tableBody.innerHTML =
+        '<tr><td colspan="6" class="text-danger text-center">Failed to load applications</td></tr>';
     }
   }
 

@@ -3,102 +3,122 @@ const db = require('../config/db');
 const Report = {
 
   // ======================
-  // All loans report
+  // Loans Issued (APPROVED ONLY)
   // ======================
-  getAllLoans: async () => {
-    const [rows] = await db.promise().query(`
-      SELECT 
-        l.loan_id,
-        u.full_name,
-        b.branch_name,
-        l.loan_amount,
-        l.interest_rate,
-        l.repayment_period,
-        l.loan_status,
-        l.created_at
-      FROM loans l
-      JOIN users u ON l.user_id = u.user_id
-      JOIN branches b ON l.branch_id = b.branch_id
-    `);
-    return rows;
+  getLoans: async (period, fromDate, toDate) => {
+    let sql = `SELECT l.loan_id, u.full_name, b.branch_name,
+                      l.loan_amount, l.loan_status, l.created_at
+               FROM loans l
+               JOIN users u ON l.user_id = u.user_id
+               JOIN branches b ON l.branch_id = b.branch_id
+               WHERE l.loan_status = 'approved'`;
+
+    const params = [];
+
+    if (period === 'custom') {
+      sql += ` AND l.created_at BETWEEN ? AND ?`;
+      params.push(fromDate, toDate);
+    }
+
+    return (await db.query(sql, params))[0];
   },
 
   // ======================
-  // All payments report
+  // Payments Collected
   // ======================
-  getAllPayments: async () => {
-    const [rows] = await db.promise().query(`
-      SELECT
-        p.payment_id,
-        u.full_name,
-        b.branch_name,
-        p.amount_paid,
-        p.payment_method,
-        p.reference_number,
-        p.payment_date
-      FROM payments p
-      JOIN users u ON p.user_id = u.user_id
-      JOIN branches b ON p.branch_id = b.branch_id
-    `);
-    return rows;
+  getPayments: async (period, fromDate, toDate) => {
+    let sql = `SELECT p.payment_id, u.full_name, b.branch_name,
+                      p.amount_paid, p.payment_date
+               FROM payments p
+               JOIN users u ON p.user_id = u.user_id
+               JOIN branches b ON p.branch_id = b.branch_id`;
+
+    const params = [];
+
+    if (period === 'custom') {
+      sql += ` WHERE p.payment_date BETWEEN ? AND ?`;
+      params.push(fromDate, toDate);
+    }
+
+    return (await db.query(sql, params))[0];
   },
 
   // ======================
-  // Summary report
+  // Branch Revenue (Payments Per Branch)
   // ======================
-  getSummary: async () => {
-    const [[summary]] = await db.promise().query(`
-      SELECT
-        (SELECT COUNT(*) FROM loans) AS total_loans,
-        (SELECT COUNT(*) FROM loans WHERE loan_status = 'approved') AS approved_loans,
-        (SELECT COUNT(*) FROM loans WHERE loan_status = 'pending') AS pending_loans,
-        (SELECT IFNULL(SUM(loan_amount),0) FROM loans) AS total_amount_loaned,
-        (SELECT IFNULL(SUM(amount_paid),0) FROM payments) AS total_payments
-    `);
+  getBranchRevenue: async (period, fromDate, toDate) => {
+    let sql = `SELECT b.branch_name,
+                      IFNULL(SUM(p.amount_paid),0) AS revenue
+               FROM branches b
+               LEFT JOIN payments p ON b.branch_id = p.branch_id`;
 
-    summary.outstanding_balance =
-      summary.total_amount_loaned - summary.total_payments;
+    const params = [];
 
-    return summary;
+    if (period === 'custom') {
+      sql += ` WHERE p.payment_date BETWEEN ? AND ?`;
+      params.push(fromDate, toDate);
+    }
+
+    sql += ` GROUP BY b.branch_id`;
+
+    return (await db.query(sql, params))[0];
   },
 
   // ======================
-  // 🔥 Branch revenue report
-  // ======================
-  getBranchRevenue: async () => {
-    const [rows] = await db.promise().query(`
-      SELECT 
-        b.branch_name,
-        COUNT(DISTINCT l.loan_id) AS total_loans,
-        IFNULL(SUM(p.amount_paid), 0) AS revenue
-      FROM branches b
-      LEFT JOIN loans l ON b.branch_id = l.branch_id
-      LEFT JOIN payments p ON l.loan_id = p.loan_id
-      GROUP BY b.branch_id
-    `);
-    return rows;
-  },
-
-  // ======================
-  // 🔥 Closed loans report
+  // Closed Loans
   // ======================
   getClosedLoans: async () => {
-    const [rows] = await db.promise().query(`
-      SELECT 
-        l.loan_id,
-        u.full_name,
-        b.branch_name,
-        l.loan_amount,
-        l.interest_rate,
-        l.repayment_period,
-        l.created_at
+    const sql = `SELECT l.loan_id, u.full_name, b.branch_name,
+                        l.loan_amount
+                 FROM loans l
+                 JOIN users u ON l.user_id = u.user_id
+                 JOIN branches b ON l.branch_id = b.branch_id
+                 WHERE l.loan_status = 'closed'`;
+
+    return (await db.query(sql))[0];
+  },
+
+  // ======================
+  // Pending Loans
+  // ======================
+  getPendingLoans: async (period, fromDate, toDate) => {
+    let sql = `SELECT l.loan_id, u.full_name, b.branch_name,
+                      l.loan_amount, l.created_at
+               FROM loans l
+               JOIN users u ON l.user_id = u.user_id
+               JOIN branches b ON l.branch_id = b.branch_id
+               WHERE l.loan_status = 'pending'`;
+
+    const params = [];
+    if (period === 'custom') {
+      sql += ` AND l.created_at BETWEEN ? AND ?`;
+      params.push(fromDate, toDate);
+    }
+
+    return (await db.query(sql, params))[0];
+  },
+
+  // ======================
+  // Overdue Loans (No payment in selected period)
+  // ======================
+  getOverdueLoans: async (period, fromDate, toDate) => {
+    let sql = `
+      SELECT l.loan_id, u.full_name, b.branch_name, l.loan_amount
       FROM loans l
       JOIN users u ON l.user_id = u.user_id
       JOIN branches b ON l.branch_id = b.branch_id
-      WHERE l.loan_status = 'closed'
-    `);
-    return rows;
+      LEFT JOIN payments p
+        ON l.loan_id = p.loan_id
+        AND p.payment_date BETWEEN ? AND ?
+      WHERE l.loan_status = 'approved'
+      AND p.payment_id IS NULL
+    `;
+
+    const params = [fromDate, toDate];
+
+    return (await db.query(sql, params))[0];
   }
+
 };
 
 module.exports = Report;

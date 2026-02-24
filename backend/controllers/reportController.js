@@ -1,11 +1,12 @@
-const Report = require('../models/Report');
+const Report = require('../models/report');
 
 // ======================
-// Loans report
+// Loans (Approved Only)
 // ======================
 exports.getLoansReport = async (req, res) => {
   try {
-    const loans = await Report.getAllLoans();
+    const { period, fromDate, toDate } = req.query;
+    const loans = await Report.getLoans(period, fromDate, toDate);
     res.json(loans);
   } catch (error) {
     console.error('LOANS REPORT ERROR:', error);
@@ -14,11 +15,12 @@ exports.getLoansReport = async (req, res) => {
 };
 
 // ======================
-// Payments report
+// Payments
 // ======================
 exports.getPaymentsReport = async (req, res) => {
   try {
-    const payments = await Report.getAllPayments();
+    const { period, fromDate, toDate } = req.query;
+    const payments = await Report.getPayments(period, fromDate, toDate);
     res.json(payments);
   } catch (error) {
     console.error('PAYMENTS REPORT ERROR:', error);
@@ -27,40 +29,56 @@ exports.getPaymentsReport = async (req, res) => {
 };
 
 // ======================
-// Summary report
-// ======================
-exports.getSummaryReport = async (req, res) => {
-  try {
-    const summary = await Report.getSummary();
-    res.json(summary);
-  } catch (error) {
-    console.error('SUMMARY REPORT ERROR:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// ======================
-// 🔥 Branch revenue report
+// Branch Revenue
 // ======================
 exports.getBranchRevenueReport = async (req, res) => {
   try {
-    const revenue = await Report.getBranchRevenue();
+    const { period, fromDate, toDate } = req.query;
+    const revenue = await Report.getBranchRevenue(period, fromDate, toDate);
     res.json(revenue);
   } catch (error) {
-    console.error('BRANCH REVENUE REPORT ERROR:', error);
+    console.error('BRANCH REVENUE ERROR:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 // ======================
-// 🔥 Closed loans report
+// Closed Loans
 // ======================
 exports.getClosedLoansReport = async (req, res) => {
   try {
-    const closedLoans = await Report.getClosedLoans();
-    res.json(closedLoans);
+    const { period, fromDate, toDate } = req.query;
+    const closed = await Report.getClosedLoans(period, fromDate, toDate);
+    res.json(closed);
   } catch (error) {
-    console.error('CLOSED LOANS REPORT ERROR:', error);
+    console.error('CLOSED LOANS ERROR:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ======================
+// Pending Loans
+// ======================
+exports.getPendingLoansReport = async (req, res) => {
+  try {
+    const pending = await Report.getPendingLoans();
+    res.json(pending);
+  } catch (error) {
+    console.error('PENDING LOANS ERROR:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ======================
+// Overdue Loans
+// ======================
+exports.getOverdueLoansReport = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+    const overdue = await Report.getOverdueLoans(fromDate, toDate);
+    res.json(overdue);
+  } catch (error) {
+    console.error('OVERDUE LOANS ERROR:', error);
     res.status(500).json({ error: error.message });
   }
 };

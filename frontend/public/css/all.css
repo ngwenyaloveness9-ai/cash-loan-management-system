@@ -1,6 +1,4 @@
-/* ==========================
-   THEME COLORS
-========================== */
+/* ========================== THEME COLORS ========================== */
 :root {
   --primary-blue: #0f3d91;
   --primary-green: #0a7f5a;
@@ -11,9 +9,7 @@
   --shadow-dark: rgba(0,0,0,0.25);
 }
 
-/* ==========================
-   RESET
-========================== */
+/* ========================== RESET ========================== */
 * {
   margin: 0;
   padding: 0;
@@ -21,20 +17,15 @@
   font-family: "Segoe UI", system-ui, sans-serif;
 }
 
-/* ==========================
-   BODY BACKGROUND
-========================== */
+/* ========================== BODY BACKGROUND ========================== */
 body {
   min-height: 100vh;
-  background:
-    linear-gradient(rgba(5,10,30,0.65), rgba(5,10,30,0.85)),
-    url("../assets/images/money.png") center/cover no-repeat fixed;
+  background: linear-gradient(rgba(5,10,30,0.65), rgba(5,10,30,0.85)),
+              url("../assets/images/lllll.jpg") center/cover no-repeat fixed;
   color: var(--white);
 }
 
-/* ==========================
-   HEADER
-========================== */
+/* ========================== HEADER ========================== */
 header {
   background: rgba(15,15,15,0.25);
   -webkit-backdrop-filter: blur(18px);
@@ -59,16 +50,12 @@ header .btn {
   font-weight: 600;
 }
 
-/* ==========================
-   MAIN CONTAINER
-========================== */
+/* ========================== MAIN CONTAINER ========================== */
 .container {
   max-width: 1100px;
 }
 
-/* ==========================
-   GLASS CARDS
-========================== */
+/* ========================== GLASS CARDS ========================== */
 .card {
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(18px);
@@ -92,9 +79,7 @@ header .btn {
   margin-bottom: 20px;
 }
 
-/* ==========================
-   FORM STYLING
-========================== */
+/* ========================== FORM STYLING ========================== */
 label {
   display: block;
   margin-bottom: 6px;
@@ -119,9 +104,7 @@ input:focus {
   background: rgba(255,255,255,0.1);
 }
 
-/* ==========================
-   BUTTON
-========================== */
+/* ========================== BUTTON ========================== */
 button[type="submit"] {
   width: 100%;
   padding: 12px 16px;
@@ -139,9 +122,7 @@ button[type="submit"]:hover {
   box-shadow: 0 8px 20px var(--shadow-dark);
 }
 
-/* ==========================
-   TABLE
-========================== */
+/* ========================== TABLE ========================== */
 .table-responsive {
   max-height: 400px;
   overflow-y: auto;
@@ -175,9 +156,7 @@ button[type="submit"]:hover {
   background: rgba(79,195,247,0.08);
 }
 
-/* ==========================
-   RESPONSIVE FIX
-========================== */
+/* ========================== RESPONSIVE FIX ========================== */
 @media (max-width: 768px) {
   header {
     flex-direction: column;

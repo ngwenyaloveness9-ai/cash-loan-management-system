@@ -45,6 +45,7 @@ document.getElementById('applyLoanForm').addEventListener('submit', async (e) =>
   const payslipFile = document.getElementById('payslip').files[0];
   const bankFile = document.getElementById('bank_statement').files[0];
 
+  // ===== VALIDATION =====
   if (!branch_id || !loan_amount || !repayment_period) {
     alert('Fill in all loan details');
     return;
@@ -55,8 +56,8 @@ document.getElementById('applyLoanForm').addEventListener('submit', async (e) =>
     return;
   }
 
-  if (!payslipFile && !bankFile) {
-    alert('Upload either a payslip or bank statement');
+  if (!bankFile) {
+    alert('Bank statement is required');
     return;
   }
 
@@ -88,20 +89,17 @@ document.getElementById('applyLoanForm').addEventListener('submit', async (e) =>
     // ================= UPLOAD DOCUMENTS =================
     const formData = new FormData();
     formData.append('id', idFile);
+    formData.append('bank_statement', bankFile);
 
     if (payslipFile) formData.append('payslip', payslipFile);
-    if (bankFile) formData.append('bank_statement', bankFile);
 
-    const docRes = await fetch(
-      `${API_BASE}/loans/${loanId}/documents`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: formData
-      }
-    );
+    const docRes = await fetch(`${API_BASE}/loans/${loanId}/documents`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
 
     const docData = await docRes.json();
 

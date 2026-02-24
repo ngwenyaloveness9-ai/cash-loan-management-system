@@ -33,7 +33,7 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(rgba(5,10,30,0.6), rgba(5,10,30,0.7)),
-    url("../assets/images/money.png") center/cover no-repeat fixed;
+    url("../assets/images/lllll.jpg") center/cover no-repeat fixed;
   color: var(--text-light);
 }
 
@@ -131,37 +131,6 @@ body {
   color: rgba(255,255,255,0.7);
 }
 
-.topbar .avatar {
-  background: var(--accent);
-  color: var(--text-dark);
-  font-weight: 700;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 1rem;
-  box-shadow: 0 2px 6px rgba(77,166,255,0.5);
-}
-
-#logoutBtn {
-  background: var(--accent);
-  color: var(--text-dark);
-  border: none;
-  font-weight: 600;
-  padding: 7px 16px;
-  border-radius: 10px;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(77,166,255,0.35);
-}
-
-#logoutBtn:hover {
-  background: #66b3ff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102,179,255,0.45);
-}
-
 /* ===============================
    SUMMARY CARDS
 ================================= */
@@ -183,11 +152,6 @@ body {
   transition: all 0.3s;
 }
 
-.summary-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 36px var(--shadow-dark);
-}
-
 .summary-card h3 {
   color: #a6d4ff;
   font-size: 1.2rem;
@@ -200,24 +164,6 @@ body {
 }
 
 /* ===============================
-   CONTENT GRID
-================================= */
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-@media (max-width: 992px) {
-  .content-grid {
-    display: block;
-  }
-  .glass-card.actions {
-    margin-top: 20px;
-  }
-}
-
-/* ===============================
    GLASS CARDS
 ================================= */
 .glass-card {
@@ -226,12 +172,6 @@ body {
   padding: 25px;
   color: var(--text-light);
   box-shadow: 0 10px 28px var(--shadow-dark);
-  transition: all 0.3s;
-}
-
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 36px var(--shadow-dark);
 }
 
 .glass-card h5 {
@@ -241,7 +181,7 @@ body {
 }
 
 /* ===============================
-   TABLES
+   TABLES — SIMPLE & CLEAR
 ================================= */
 .table-responsive {
   max-height: 400px;
@@ -249,77 +189,53 @@ body {
 }
 
 .table {
-  background: var(--card-bg);
-  border-radius: 12px;
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
+  background: #ffffff; /* Solid white background */
+  border-radius: 10px;
   overflow: hidden;
 }
 
 .table thead {
-  background: linear-gradient(90deg, #1a2e5b, #162b50);
+  background: #0f3d91;
 }
 
 .table thead th {
-  color: #a6d4ff;
-  font-weight: 700;
-  padding: 14px 16px;
-  border-bottom: 2px solid var(--accent);
-}
-
-.table tbody tr {
-  background: #162b50;
-  transition: all 0.25s;
-}
-
-.table tbody tr:nth-child(even) {
-  background: #1d3b6d;
-}
-
-.table tbody tr:hover {
-  background: #2a4b8d;
+  color: #ffffff;
+  font-weight: bold;
+  padding: 14px;
+  text-align: left;
 }
 
 .table th,
 .table td {
-  color: #1d4975 !important;
-  padding: 14px 16px;
-}
-
-.table .status {
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.85rem;
+  padding: 14px;
+  border: 1px solid #dddddd;
+  color: #0f1f3a; /* Dark text for visibility */
   font-weight: 600;
-  text-align: center;
-  display: inline-block;
 }
 
-.status-paid { background: #4da6ff; color: var(--text-dark); }
-.status-pending { background: #66b3ff; color: var(--text-dark); }
-.status-overdue { background: #ff6b6b; color: #fff; }
-
-/* ===============================
-   QUICK ACTION LINKS
-================================= */
-.glass-card.actions a {
-  display: block;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  background: var(--accent);
-  color: var(--text-dark);
-  text-decoration: none;
-  font-weight: 600;
-  border-radius: 12px;
-  transition: all 0.25s;
-  box-shadow: 0 4px 12px rgba(77,166,255,0.35);
+.table tbody tr:nth-child(even) {
+  background-color: #f2f6fc;
 }
 
-.glass-card.actions a:hover {
-  background: #66b3ff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102,179,255,0.45);
+.table tbody tr:hover {
+  background-color: #e6f0ff;
+}
+
+.status-paid {
+  color: green;
+  font-weight: bold;
+}
+
+.status-pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.status-overdue {
+  color: red;
+  font-weight: bold;
 }
 
 /* ===============================
@@ -331,38 +247,4 @@ footer.footer {
   text-align: center;
   padding: 1.5rem 0;
   border-top: 2px solid var(--accent);
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
-}
-
-/* ===============================
-   TYPOGRAPHY
-================================= */
-h1,h2,h3,h4,h5,h6 {
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-p, span, small, td, th {
-  line-height: 1.5;
-}
-
-/* ===============================
-   OVERLAY FOR SIDEBAR
-================================= */
-#overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.3);
-  z-index: 900;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s;
-}
-
-#overlay.active {
-  opacity: 1;
-  visibility: visible;
 }

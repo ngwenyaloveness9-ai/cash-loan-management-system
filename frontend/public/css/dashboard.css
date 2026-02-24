@@ -1,7 +1,7 @@
-/* ===============================
+/* =====================================================
    BANK DASHBOARD — PREMIUM STYLE
    THEME: BLUE / LIGHT BLUE
-================================= */
+===================================================== */
 
 /* ===============================
    VARIABLES / THEME COLORS
@@ -10,13 +10,12 @@
   --primary-blue: #0f3d91;
   --primary-green: #0a7f5a;
   --accent: #4fc3f7;
-
   --sidebar-bg: linear-gradient(180deg, #1a2e5b, #12224a);
   --card-bg: rgba(26, 46, 91, 0.95);
   --card-hover-bg: rgba(26, 46, 91, 1);
   --text-light: #e1f0ff;
   --text-dark: #0f1f3a;
-  --shadow-dark: rgba(0,0,0,0.35);
+  --shadow-dark: rgba(0, 0, 0, 0.35);
 }
 
 /* ===============================
@@ -32,7 +31,7 @@
 body {
   min-height: 100vh;
   background:
-    linear-gradient(rgba(5,10,30,0.6), rgba(5,10,30,0.7)),
+    linear-gradient(rgba(5, 10, 30, 0.6), rgba(5, 10, 30, 0.7)),
     url("../assets/images/lllll.jpg") center/cover no-repeat fixed;
   color: var(--text-light);
 }
@@ -63,7 +62,6 @@ body {
   box-shadow: 2px 0 12px var(--shadow-dark);
   z-index: 1000;
   transition: transform 0.3s ease;
-  transform: translateX(0);
 }
 
 .sidebar.collapsed {
@@ -128,7 +126,7 @@ body {
 }
 
 .topbar small {
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* ===============================
@@ -150,6 +148,11 @@ body {
   color: var(--text-light);
   box-shadow: 0 10px 30px var(--shadow-dark);
   transition: all 0.3s;
+}
+
+.summary-card:hover {
+  background: var(--card-hover-bg);
+  transform: translateY(-4px);
 }
 
 .summary-card h3 {
@@ -181,7 +184,7 @@ body {
 }
 
 /* ===============================
-   TABLES — SIMPLE & CLEAR
+   TABLES — CLEAN & PROFESSIONAL
 ================================= */
 .table-responsive {
   max-height: 400px;
@@ -191,51 +194,57 @@ body {
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff; /* Solid white background */
-  border-radius: 10px;
+  background: #ffffff;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 .table thead {
-  background: #0f3d91;
+  background: var(--primary-blue);
 }
 
 .table thead th {
-  color: #ffffff;
-  font-weight: bold;
-  padding: 14px;
+  color: #ffffff !important;
+  font-weight: 700;
+  padding: 16px;
   text-align: left;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  border: none;
 }
 
-.table th,
-.table td {
-  padding: 14px;
-  border: 1px solid #dddddd;
-  color: #0f1f3a; /* Dark text for visibility */
+.table tbody td {
+  padding: 15px;
+  border: 1px solid #e0e6f0;
+  color: var(--text-dark) !important;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .table tbody tr:nth-child(even) {
-  background-color: #f2f6fc;
+  background-color: #f4f8ff;
 }
 
 .table tbody tr:hover {
   background-color: #e6f0ff;
+  transition: 0.2s ease;
 }
 
+/* Status Colors */
 .status-paid {
-  color: green;
-  font-weight: bold;
+  color: #0a7f5a;
+  font-weight: 700;
 }
 
 .status-pending {
-  color: orange;
-  font-weight: bold;
+  color: #d97706;
+  font-weight: 700;
 }
 
 .status-overdue {
-  color: red;
-  font-weight: bold;
+  color: #dc2626;
+  font-weight: 700;
 }
 
 /* ===============================
@@ -247,4 +256,17 @@ footer.footer {
   text-align: center;
   padding: 1.5rem 0;
   border-top: 2px solid var(--accent);
+}
+
+/* =====================================================
+   BORROWER TABLE OVERRIDE (FINAL FIX)
+===================================================== */
+
+.borrower-table thead th {
+  background-color: #0f3d91 !important;
+  color: #ffffff !important;
+}
+
+.borrower-table tbody td {
+  color: #0f1f3a !important;
 }

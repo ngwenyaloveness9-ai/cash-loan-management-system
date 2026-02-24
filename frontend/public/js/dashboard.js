@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userAvatar.textContent = formatted.initials;
   }
 
-  // ================= LOAD OFFICER PROFILE =================
+  // ================= LOAD PROFILE (OFFICER PAGE ONLY) =================
   const officerName = document.getElementById('officerName');
   const officerEmail = document.getElementById('officerEmail');
   const officerBranch = document.getElementById('officerBranch');
@@ -37,9 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     officerRole.textContent = user.role || '—';
   }
 
-  // ================= LOAD LOANS =================
+  // ================= ROLE BASED LOAD =================
   if (user.role === 'borrower') loadMyLoans(token);
-  else if (user.role === 'officer' || user.role === 'admin') loadLoanApplications(token);
+  if (user.role === 'officer' || user.role === 'admin') loadLoanApplications(token);
 
   // ================= SIDEBAR ACTIVE LINKS =================
   document.querySelectorAll('.nav-link').forEach(link => {
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.classList.remove('active');
   });
 
-  // ================= HELPERS =================
+  // ================= HELPER =================
   function formatUserName(fullName, title = "Ms") {
     const parts = fullName.trim().split(" ");
     const surname = parts[parts.length - 1];
@@ -76,12 +76,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return { display: `${title} ${initials}. ${surname}`, initials };
   }
 
-  // ================= LOAD BORROWER LOANS =================
+  // ======================================================
+  // ================= BORROWER LOANS =====================
+  // ======================================================
   async function loadMyLoans(token) {
+
     const tableBody = document.getElementById('loansTableBody');
+    const totalPayableEl = document.getElementById('totalPayable');
+    const remainingBalanceEl = document.getElementById('remainingBalance');
+    const loanStatusEl = document.getElementById('loanStatus');
+
     if (!tableBody) return;
 
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Loading loans...</td></tr>';
+    tableBody.innerHTML =
+      '<tr><td colspan="7" class="text-center">Loading loans...</td></tr>';
 
     try {
       const res = await fetch(`${API_BASE}/loans`, {
@@ -92,20 +100,41 @@ document.addEventListener('DOMContentLoaded', () => {
       tableBody.innerHTML = '';
 
       if (!loans.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No loans found</td></tr>';
+
+        tableBody.innerHTML =
+          '<tr><td colspan="7" class="text-center">No loans found</td></tr>';
+
+        if (totalPayableEl) totalPayableEl.textContent = 'R 0.00';
+        if (remainingBalanceEl) remainingBalanceEl.textContent = 'R 0.00';
+        if (loanStatusEl) loanStatusEl.textContent = 'No Loans';
+
         return;
       }
 
+      let totalPayableSum = 0;
+      let remainingBalanceSum = 0;
+      let hasPending = false;
+      let hasActive = false;
+
       loans.forEach(loan => {
-        const loanAmount = Number(loan.loan_amount);
-        const totalPayable = Number(loan.total_payable);
-        const remainingBalance = Number(loan.loan_balance);
+
+        const loanAmount = Number(loan.loan_amount) || 0;
+        const totalPayable = Number(loan.total_payable) || 0;
+        const remainingBalance = Number(loan.loan_balance) || 0;
         const repaymentMonths = loan.repayment_period;
+        const status = (loan.loan_status || '').toLowerCase();
+
         const monthlyInstallment = repaymentMonths
           ? (totalPayable / repaymentMonths).toFixed(2)
           : '—';
 
-        const isClosed = loan.loan_status === 'closed';
+        totalPayableSum += totalPayable;
+        remainingBalanceSum += remainingBalance;
+
+        if (status === 'pending') hasPending = true;
+        if (status === 'approved' || status === 'active') hasActive = true;
+
+        const isClosed = status === 'closed';
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -113,24 +142,47 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>R ${loanAmount.toFixed(2)}</td>
           <td>R ${totalPayable.toFixed(2)}</td>
           <td>${isClosed ? 'R 0.00' : `R ${remainingBalance.toFixed(2)}`}</td>
-          <td>${repaymentMonths}</td>
+          <td>${repaymentMonths || '—'}</td>
           <td>${repaymentMonths ? `R ${monthlyInstallment}` : '—'}</td>
-          <td class="status status-${loan.loan_status.toLowerCase()} text-capitalize fw-semibold">
+          <td class="status status-${status} text-capitalize fw-semibold">
             ${loan.loan_status}
           </td>
         `;
+
         tableBody.appendChild(row);
       });
 
+      // ===== UPDATE SUMMARY CARDS =====
+
+      if (totalPayableEl)
+        totalPayableEl.textContent = `R ${totalPayableSum.toFixed(2)}`;
+
+      if (remainingBalanceEl)
+        remainingBalanceEl.textContent = `R ${remainingBalanceSum.toFixed(2)}`;
+
+      let overallStatus = 'Closed';
+
+      if (hasPending) overallStatus = 'Pending';
+      else if (hasActive) overallStatus = 'Active';
+      else if (remainingBalanceSum > 0) overallStatus = 'Active';
+
+      if (loanStatusEl)
+        loanStatusEl.textContent = overallStatus;
+
     } catch (err) {
+
       console.error('BORROWER LOAN LOAD ERROR:', err);
+
       tableBody.innerHTML =
         '<tr><td colspan="7" class="text-center text-danger">Failed to load loans</td></tr>';
     }
   }
 
-  // ================= OFFICER / ADMIN LOANS =================
+  // ======================================================
+  // ================= OFFICER / ADMIN ====================
+  // ======================================================
   async function loadLoanApplications(token) {
+
     const tableBody = document.getElementById('applicationsTableBody');
     if (!tableBody) return;
 
@@ -152,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       loans.forEach(loan => {
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${loan.loan_id}</td>
@@ -173,7 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
     } catch (err) {
+
       console.error('APPLICATION LOAD ERROR:', err);
+
       tableBody.innerHTML =
         '<tr><td colspan="6" class="text-danger text-center">Failed to load applications</td></tr>';
     }

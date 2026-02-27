@@ -21,7 +21,7 @@ async function loadPayments() {
     table.innerHTML = '';
 
     if (!Array.isArray(payments) || payments.length === 0) {
-      table.innerHTML = `<tr><td colspan="4">No payments found</td></tr>`;
+      table.innerHTML = `<tr><td colspan="5">No payments found</td></tr>`;
       return;
     }
 
@@ -30,9 +30,9 @@ async function loadPayments() {
       row.innerHTML = `
         <td>${p.payment_id}</td>
         <td>${p.loan_id}</td>
-        <td>R ${p.amount_paid}</td>
+        <td>R ${Number(p.amount_paid).toFixed(2)}</td>
+        <td>${p.payment_method || '—'}</td>
         <td>${new Date(p.payment_date).toLocaleDateString()}</td>
-
       `;
       table.appendChild(row);
     });
@@ -44,7 +44,25 @@ async function loadPayments() {
 
 loadPayments();
 
-// ================= MAKE PAYMENT (Borrower only) =================
+// ================= SHOW/HIDE SECTIONS =================
+const methodSelect = document.getElementById('payment_method');
+const cardSection = document.getElementById('cardSection');
+const payshapSection = document.getElementById('payshapSection');
+
+methodSelect?.addEventListener('change', () => {
+  cardSection.style.display = 'none';
+  payshapSection.style.display = 'none';
+
+  if (methodSelect.value === 'card') {
+    cardSection.style.display = 'block';
+  }
+
+  if (methodSelect.value === 'payshap') {
+    payshapSection.style.display = 'block';
+  }
+});
+
+// ================= SUBMIT PAYMENT =================
 const paymentForm = document.getElementById('paymentForm');
 
 if (user.role !== 'borrower') {
@@ -55,17 +73,48 @@ if (user.role !== 'borrower') {
 paymentForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const payload = {
-    loan_id: document.getElementById('loan_id').value,
-    amount_paid: document.getElementById('amount').value,
-    payment_method: document.getElementById('payment_method')?.value || null,
-    reference_number: document.getElementById('reference_number')?.value || null
-  };
+  const loanId = document.getElementById('loan_id').value;
+  const amount = document.getElementById('amount').value;
+  const method = document.getElementById('payment_method').value;
 
-  if (!payload.loan_id || !payload.amount_paid) {
-    alert('Loan ID and amount are required');
+  if (!loanId || !amount || !method) {
+    alert('All fields are required');
     return;
   }
+
+  // Demo validation
+  if (method === 'card') {
+    const cardNumber = document.getElementById('card_number').value;
+    const expiry = document.getElementById('expiry').value;
+    const cvv = document.getElementById('cvv').value;
+
+    if (!cardNumber || !expiry || !cvv) {
+      alert('Please complete card details');
+      return;
+    }
+  }
+
+  if (method === 'payshap') {
+    const ref = document.getElementById('reference_number').value;
+    if (!ref) {
+      alert('Enter PayShap reference');
+      return;
+    }
+  }
+
+  // Simulated processing
+  const button = paymentForm.querySelector('button');
+  button.disabled = true;
+  button.innerText = "Processing Payment...";
+
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const payload = {
+    loan_id: loanId,
+    amount_paid: amount,
+    payment_method: method,
+    reference_number: document.getElementById('reference_number')?.value || null
+  };
 
   try {
     const res = await fetch(`${API_BASE}/payments`, {
@@ -81,15 +130,22 @@ paymentForm?.addEventListener('submit', async (e) => {
 
     if (!res.ok) {
       alert(data.error || 'Payment failed');
+      button.disabled = false;
+      button.innerText = "Submit Payment";
       return;
     }
 
-    alert('Payment recorded successfully');
+    alert(`Payment successful via ${method.toUpperCase()} ✅`);
     paymentForm.reset();
+    cardSection.style.display = 'none';
+    payshapSection.style.display = 'none';
     loadPayments();
 
   } catch (err) {
-    console.error('PAYMENT SUBMIT ERROR:', err);
+    console.error('PAYMENT ERROR:', err);
     alert('Server error');
   }
+
+  button.disabled = false;
+  button.innerText = "Submit Payment";
 });

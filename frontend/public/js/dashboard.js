@@ -3,28 +3,26 @@ const API_BASE = 'http://localhost:5000/api';
 // ================= DOM READY =================
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ================= AUTH CHECK =================
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
   if (!token || !user) return window.location.href = 'login.html';
 
-  // ================= LOGOUT =================
+  // Logout
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     localStorage.clear();
     window.location.href = 'login.html';
   });
 
-  // ================= USER WELCOME & AVATAR =================
+  // Welcome & Avatar
   const welcomeText = document.getElementById('welcomeText');
   const userAvatar = document.getElementById('userAvatar');
-
   if (welcomeText && userAvatar) {
     const formatted = formatUserName(user.full_name, user.title || "Ms");
     welcomeText.textContent = `Welcome Back, ${formatted.display}`;
     userAvatar.textContent = formatted.initials;
   }
 
-  // ================= LOAD PROFILE (OFFICER PAGE ONLY) =================
+  // Officer Profile
   const officerName = document.getElementById('officerName');
   const officerEmail = document.getElementById('officerEmail');
   const officerBranch = document.getElementById('officerBranch');
@@ -37,38 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     officerRole.textContent = user.role || '—';
   }
 
-  // ================= ROLE BASED LOAD =================
+  // Load data
   if (user.role === 'borrower') loadMyLoans(token);
-  if (user.role === 'officer' || user.role === 'admin') loadLoanApplications(token);
+  else if (user.role === 'officer' || user.role === 'admin') loadLoanApplications(token);
 
-  // ================= SIDEBAR ACTIVE LINKS =================
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', e => {
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      e.target.classList.add('active');
-    });
-  });
-
-  // ================= SIDEBAR TOGGLE =================
-  const sidebar = document.querySelector('.sidebar');
-  const main = document.querySelector('.main');
-  const toggleBtn = document.getElementById('sidebarToggle');
-  const overlay = document.getElementById('overlay');
-
-  toggleBtn?.addEventListener('click', () => {
-    const isCollapsed = sidebar.classList.contains('collapsed');
-    sidebar.classList.toggle('collapsed', !isCollapsed);
-    main.classList.toggle('sidebar-collapsed', !isCollapsed);
-    overlay.classList.toggle('active', !isCollapsed);
-  });
-
-  overlay?.addEventListener('click', () => {
-    sidebar.classList.add('collapsed');
-    main.classList.add('sidebar-collapsed');
-    overlay.classList.remove('active');
-  });
-
-  // ================= HELPER =================
+  // Helper
   function formatUserName(fullName, title = "Ms") {
     const parts = fullName.trim().split(" ");
     const surname = parts[parts.length - 1];
@@ -76,20 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return { display: `${title} ${initials}. ${surname}`, initials };
   }
 
-  // ======================================================
-  // ================= BORROWER LOANS =====================
-  // ======================================================
+  // ================= Borrower Loans =================
   async function loadMyLoans(token) {
-
     const tableBody = document.getElementById('loansTableBody');
-    const totalPayableEl = document.getElementById('totalPayable');
-    const remainingBalanceEl = document.getElementById('remainingBalance');
-    const loanStatusEl = document.getElementById('loanStatus');
-
     if (!tableBody) return;
 
-    tableBody.innerHTML =
-      '<tr><td colspan="7" class="text-center">Loading loans...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Loading loans...</td></tr>';
 
     try {
       const res = await fetch(`${API_BASE}/loans`, {
@@ -100,41 +63,28 @@ document.addEventListener('DOMContentLoaded', () => {
       tableBody.innerHTML = '';
 
       if (!loans.length) {
-
-        tableBody.innerHTML =
-          '<tr><td colspan="7" class="text-center">No loans found</td></tr>';
-
-        if (totalPayableEl) totalPayableEl.textContent = 'R 0.00';
-        if (remainingBalanceEl) remainingBalanceEl.textContent = 'R 0.00';
-        if (loanStatusEl) loanStatusEl.textContent = 'No Loans';
-
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No loans found</td></tr>';
         return;
       }
 
       let totalPayableSum = 0;
       let remainingBalanceSum = 0;
-      let hasPending = false;
-      let hasActive = false;
+      let overallStatus = '—';
 
       loans.forEach(loan => {
-
-        const loanAmount = Number(loan.loan_amount) || 0;
-        const totalPayable = Number(loan.total_payable) || 0;
-        const remainingBalance = Number(loan.loan_balance) || 0;
+        const loanAmount = Number(loan.loan_amount);
+        const totalPayable = Number(loan.total_payable);
+        const remainingBalance = Number(loan.loan_balance);
         const repaymentMonths = loan.repayment_period;
-        const status = (loan.loan_status || '').toLowerCase();
-
         const monthlyInstallment = repaymentMonths
           ? (totalPayable / repaymentMonths).toFixed(2)
           : '—';
 
+        const isClosed = loan.loan_status === 'closed';
+
         totalPayableSum += totalPayable;
         remainingBalanceSum += remainingBalance;
-
-        if (status === 'pending') hasPending = true;
-        if (status === 'approved' || status === 'active') hasActive = true;
-
-        const isClosed = status === 'closed';
+        if (loan.loan_status !== 'closed') overallStatus = loan.loan_status;
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -142,47 +92,28 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>R ${loanAmount.toFixed(2)}</td>
           <td>R ${totalPayable.toFixed(2)}</td>
           <td>${isClosed ? 'R 0.00' : `R ${remainingBalance.toFixed(2)}`}</td>
-          <td>${repaymentMonths || '—'}</td>
+          <td>${repaymentMonths}</td>
           <td>${repaymentMonths ? `R ${monthlyInstallment}` : '—'}</td>
-          <td class="status status-${status} text-capitalize fw-semibold">
+          <td class="status status-${loan.loan_status.toLowerCase()} text-capitalize fw-semibold">
             ${loan.loan_status}
           </td>
         `;
-
         tableBody.appendChild(row);
       });
 
-      // ===== UPDATE SUMMARY CARDS =====
-
-      if (totalPayableEl)
-        totalPayableEl.textContent = `R ${totalPayableSum.toFixed(2)}`;
-
-      if (remainingBalanceEl)
-        remainingBalanceEl.textContent = `R ${remainingBalanceSum.toFixed(2)}`;
-
-      let overallStatus = 'Closed';
-
-      if (hasPending) overallStatus = 'Pending';
-      else if (hasActive) overallStatus = 'Active';
-      else if (remainingBalanceSum > 0) overallStatus = 'Active';
-
-      if (loanStatusEl)
-        loanStatusEl.textContent = overallStatus;
+      document.getElementById('totalPayable').textContent = `R ${totalPayableSum.toFixed(2)}`;
+      document.getElementById('remainingBalance').textContent = `R ${remainingBalanceSum.toFixed(2)}`;
+      document.getElementById('loanStatus').textContent = overallStatus;
 
     } catch (err) {
-
       console.error('BORROWER LOAN LOAD ERROR:', err);
-
       tableBody.innerHTML =
         '<tr><td colspan="7" class="text-center text-danger">Failed to load loans</td></tr>';
     }
   }
 
-  // ======================================================
-  // ================= OFFICER / ADMIN ====================
-  // ======================================================
+  // ================= Officer/Admin Applications =================
   async function loadLoanApplications(token) {
-
     const tableBody = document.getElementById('applicationsTableBody');
     if (!tableBody) return;
 
@@ -204,14 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       loans.forEach(loan => {
-
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${loan.loan_id}</td>
           <td>${loan.full_name}</td>
           <td>R ${loan.loan_amount}</td>
           <td>${loan.branch_name}</td>
-          <td>${loan.loan_status}</td>
+          <td class="status status-${loan.loan_status.toLowerCase()} text-capitalize fw-semibold">${loan.loan_status}</td>
           <td>
             ${
               loan.loan_status === 'pending'
@@ -226,12 +156,102 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
     } catch (err) {
-
       console.error('APPLICATION LOAD ERROR:', err);
-
       tableBody.innerHTML =
         '<tr><td colspan="6" class="text-danger text-center">Failed to load applications</td></tr>';
     }
   }
 
-});
+}); // DOMContentLoaded end
+
+// ================================
+// VIEW DOCUMENTS (OFFICER)
+// ================================
+window.viewDocuments = async function (loanId) {
+  const documentsList = document.getElementById('documentsList');
+  if (!documentsList) return;
+
+  documentsList.innerHTML = '<p class="text-muted">Loading documents...</p>';
+
+  const token = localStorage.getItem('token');
+  if (!token) return alert('Unauthorized!');
+
+  try {
+    const res = await fetch(`${API_BASE}/loans/${loanId}/documents`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch documents');
+    const docs = await res.json();
+
+    if (!docs.length) {
+      documentsList.innerHTML = '<p class="text-muted">No documents uploaded for this loan.</p>';
+      return;
+    }
+
+    const ul = document.createElement('ul');
+    ul.classList.add('list-group');
+    docs.forEach(doc => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML = `
+        <span>${doc.name}</span>
+        <a href="${doc.url}" target="_blank" class="btn btn-sm btn-primary">View</a>
+      `;
+      ul.appendChild(li);
+    });
+
+    documentsList.innerHTML = '';
+    documentsList.appendChild(ul);
+
+    const documentsModal = new bootstrap.Modal(document.getElementById('documentsModal'));
+    documentsModal.show();
+
+  } catch (err) {
+    console.error('View documents error:', err);
+    documentsList.innerHTML = `<p class="text-danger">Failed to load documents.</p>`;
+  }
+};
+
+// ================================
+// APPROVE / REJECT LOANS
+// ================================
+window.approveLoan = async function (loanId) {
+  if (!confirm(`Are you sure you want to APPROVE loan ${loanId}?`)) return;
+
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`${API_BASE}/loans/${loanId}/approve`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to approve loan');
+
+    alert(`Loan ${loanId} approved successfully`);
+    loadLoanApplications(token);
+
+  } catch (err) {
+    console.error('Approve loan error:', err);
+    alert(`Failed to approve loan ${loanId}`);
+  }
+};
+
+window.rejectLoan = async function (loanId) {
+  if (!confirm(`Are you sure you want to REJECT loan ${loanId}?`)) return;
+
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`${API_BASE}/loans/${loanId}/reject`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to reject loan');
+
+    alert(`Loan ${loanId} rejected successfully`);
+    loadLoanApplications(token);
+
+  } catch (err) {
+    console.error('Reject loan error:', err);
+    alert(`Failed to reject loan ${loanId}`);
+  }
+};

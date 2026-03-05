@@ -7,11 +7,7 @@ const app = express();
 
 app.use(cors());
 
-/**
- * ✅ IMPORTANT FIX
- * Only parse JSON if request is NOT multipart/form-data
- * This prevents hanging requests when using multer
- */
+// ✅ Handle JSON (but allow multer multipart)
 app.use((req, res, next) => {
   if (req.is('multipart/form-data')) {
     return next();
@@ -19,22 +15,25 @@ app.use((req, res, next) => {
   express.json()(req, res, next);
 });
 
-// ✅ Serve uploaded files (THIS WAS MISSING BEFORE)
-app.use('/api', require('./routes/documentRoutes'));
+// ✅ 🔥 THIS IS THE IMPORTANT FIX
+// Serve uploaded files publicly
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
+// ROOT TEST
 app.get('/', (req, res) => {
   res.send('Cash Loan Management System API is running');
 });
 
-// ROUTES
+// ================= ROUTES =================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/branches', require('./routes/branchRoutes'));
 app.use('/api/loans', require('./routes/loanRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/documents', require('./routes/documentRoutes'));
+
+// 🔥 Mount document routes ONLY ONCE
+app.use('/api', require('./routes/documentRoutes'));
 
 // ❌ MUST BE LAST
 app.use((req, res) => {

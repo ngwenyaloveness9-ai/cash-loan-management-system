@@ -35,9 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
     officerRole.textContent = user.role || '—';
   }
 
-  // Load Applications (Officer/Admin only)
+  // Officer/Admin dashboard
   if (user.role === 'officer' || user.role === 'admin') {
     loadLoanApplications(token);
+  }
+
+  // Borrower dashboard
+  if (user.role === 'borrower') {
+    loadBorrowerDashboard(token, user);
   }
 
 });
@@ -55,6 +60,7 @@ async function loadLoanApplications(token) {
     '<tr><td colspan="6" class="text-center">Loading applications...</td></tr>';
 
   try {
+
     const res = await fetch(`${API_BASE}/loans`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -62,6 +68,7 @@ async function loadLoanApplications(token) {
     if (!res.ok) throw new Error('Failed to fetch loans');
 
     const loans = await res.json();
+
     tableBody.innerHTML = '';
 
     if (!loans.length) {
@@ -71,16 +78,15 @@ async function loadLoanApplications(token) {
     }
 
     loans.forEach(loan => {
+
       const row = document.createElement('tr');
 
       row.innerHTML = `
         <td>${loan.loan_id}</td>
-        <td>${loan.full_name}</td>
+        <td>${loan.full_name || '-'}</td>
         <td>R ${Number(loan.loan_amount).toFixed(2)}</td>
-        <td>${loan.branch_name}</td>
-        <td class="text-capitalize fw-semibold">
-          ${loan.loan_status}
-        </td>
+        <td>${loan.branch_name || '-'}</td>
+        <td class="text-capitalize fw-semibold">${loan.loan_status}</td>
         <td>
           ${
             loan.loan_status === 'pending'
@@ -104,13 +110,18 @@ async function loadLoanApplications(token) {
       `;
 
       tableBody.appendChild(row);
+
     });
 
   } catch (err) {
+
     console.error('APPLICATION LOAD ERROR:', err);
+
     tableBody.innerHTML =
       '<tr><td colspan="6" class="text-danger text-center">Failed to load applications</td></tr>';
+
   }
+
 }
 
 
@@ -126,9 +137,9 @@ window.viewDocuments = async function (loanId) {
     '<p class="text-muted">Loading documents...</p>';
 
   const token = localStorage.getItem('token');
-  if (!token) return alert('Unauthorized!');
 
   try {
+
     const res = await fetch(`${API_BASE}/loans/${loanId}/documents`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -149,6 +160,7 @@ window.viewDocuments = async function (loanId) {
     docs.forEach(doc => {
 
       const li = document.createElement('li');
+
       li.className =
         'list-group-item d-flex justify-content-between align-items-center';
 
@@ -162,6 +174,7 @@ window.viewDocuments = async function (loanId) {
       `;
 
       ul.appendChild(li);
+
     });
 
     documentsList.innerHTML = '';
@@ -170,79 +183,180 @@ window.viewDocuments = async function (loanId) {
     const modal = new bootstrap.Modal(
       document.getElementById('documentsModal')
     );
+
     modal.show();
 
   } catch (err) {
+
     console.error('View documents error:', err);
+
     documentsList.innerHTML =
       '<p class="text-danger">Failed to load documents.</p>';
+
   }
+
 };
 
 
 // ================================
-// APPROVE LOAN (FIXED)
+// APPROVE LOAN
 // ================================
 window.approveLoan = async function (loanId) {
 
-  if (!confirm(`Are you sure you want to APPROVE loan ${loanId}?`)) return;
+  if (!confirm(`Approve loan ${loanId}?`)) return;
 
   try {
+
     const res = await fetch(`${API_BASE}/loans/${loanId}/approve`, {
-      method: 'PUT', // ✅ FIXED
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${globalToken}`,
         'Content-Type': 'application/json'
       }
     });
 
-    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error('Approve failed');
 
-    if (!res.ok) {
-      console.error('Approve response:', data);
-      throw new Error(data.error || 'Failed to approve loan');
-    }
-
-    alert(`Loan ${loanId} approved successfully`);
+    alert(`Loan ${loanId} approved`);
 
     loadLoanApplications(globalToken);
 
   } catch (err) {
-    console.error('Approve loan error:', err);
-    alert(`Failed to approve loan ${loanId}`);
+
+    console.error(err);
+
+    alert('Failed to approve loan');
+
   }
+
 };
 
 
 // ================================
-// REJECT LOAN (FIXED)
+// REJECT LOAN
 // ================================
 window.rejectLoan = async function (loanId) {
 
-  if (!confirm(`Are you sure you want to REJECT loan ${loanId}?`)) return;
+  if (!confirm(`Reject loan ${loanId}?`)) return;
 
   try {
+
     const res = await fetch(`${API_BASE}/loans/${loanId}/reject`, {
-      method: 'PUT', // ✅ FIXED
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${globalToken}`,
         'Content-Type': 'application/json'
       }
     });
 
-    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error('Reject failed');
 
-    if (!res.ok) {
-      console.error('Reject response:', data);
-      throw new Error(data.error || 'Failed to reject loan');
-    }
-
-    alert(`Loan ${loanId} rejected successfully`);
+    alert(`Loan ${loanId} rejected`);
 
     loadLoanApplications(globalToken);
 
   } catch (err) {
-    console.error('Reject loan error:', err);
-    alert(`Failed to reject loan ${loanId}`);
+
+    console.error(err);
+
+    alert('Failed to reject loan');
+
   }
+
 };
+
+
+// ================================
+// BORROWER DASHBOARD
+// ================================
+async function loadBorrowerDashboard(token, user) {
+
+  const tableBody = document.getElementById('loansTableBody');
+  const totalPayable = document.getElementById('totalPayable');
+  const remainingBalance = document.getElementById('remainingBalance');
+  const loanStatus = document.getElementById('loanStatus');
+  const welcomeText = document.getElementById('welcomeText');
+
+  if (!tableBody) return;
+
+  // ✅ Show user name in welcome text
+  if (welcomeText && user.full_name) {
+    welcomeText.textContent = `Welcome Back, ${user.full_name}`;
+  }
+
+  tableBody.innerHTML =
+    '<tr><td colspan="7" class="text-center">Loading loans...</td></tr>';
+
+  try {
+
+    const res = await fetch(`${API_BASE}/loans`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch loans');
+
+    const loans = await res.json();
+
+    tableBody.innerHTML = '';
+
+    if (!loans.length) {
+
+      tableBody.innerHTML =
+        '<tr><td colspan="7" class="text-center">No loans found</td></tr>';
+
+      if (totalPayable) totalPayable.textContent = "R 0.00";
+      if (remainingBalance) remainingBalance.textContent = "R 0.00";
+      if (loanStatus) loanStatus.textContent = "No Loan";
+
+      return;
+    }
+
+    let totalPay = 0;
+    let remaining = 0;
+
+    loans.forEach(loan => {
+
+      // ✅ Safe values
+      const totalPayableAmount = Number(loan.total_payable) || 0;
+
+      const remainingBal =
+        loan.remaining_balance !== null && loan.remaining_balance !== undefined
+          ? Number(loan.remaining_balance)
+          : totalPayableAmount;
+
+      const monthlyInstallment =
+        totalPayableAmount / Number(loan.repayment_period || 1);
+
+      totalPay += totalPayableAmount;
+      remaining += remainingBal;
+
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+        <td>${loan.loan_id}</td>
+        <td>R ${Number(loan.loan_amount).toFixed(2)}</td>
+        <td>R ${totalPayableAmount.toFixed(2)}</td>
+        <td>R ${remainingBal.toFixed(2)}</td>
+        <td>${loan.repayment_period}</td>
+        <td>R ${monthlyInstallment.toFixed(2)}</td>
+        <td class="fw-semibold text-capitalize">${loan.loan_status}</td>
+      `;
+
+      tableBody.appendChild(row);
+
+    });
+
+    if (totalPayable) totalPayable.textContent = `R ${totalPay.toFixed(2)}`;
+    if (remainingBalance) remainingBalance.textContent = `R ${remaining.toFixed(2)}`;
+    if (loanStatus) loanStatus.textContent = loans[0].loan_status;
+
+  } catch (err) {
+
+    console.error('Borrower dashboard error:', err);
+
+    tableBody.innerHTML =
+      '<tr><td colspan="7" class="text-danger text-center">Failed to load loans</td></tr>';
+
+  }
+
+}

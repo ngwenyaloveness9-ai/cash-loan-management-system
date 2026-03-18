@@ -1,141 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Apply for Loan</title>
 
-  <!-- Bootstrap CSS -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  >
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Your CSS -->
-  <link rel="stylesheet" href="../public/css/all.css">
+<title>Apply for Loan</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="../public/css/all.css">
+
 </head>
 
 <body>
 
-  <header class="p-3 border-bottom bg-light">
-    <div class="container d-flex justify-content-between align-items-center">
-      <h1 class="h4 mb-0">Apply for a Loan</h1>
-      <a href="borrower-dashboard.html" class="btn btn-secondary btn-sm">
-        Back to Dashboard
-      </a>
-    </div>
-  </header>
+<header class="p-3 border-bottom bg-light">
 
-  <main class="container mt-4">
-    <form id="applyLoanForm" enctype="multipart/form-data">
+<div class="container d-flex justify-content-between align-items-center">
 
-      <!-- ================= LOAN DETAILS ================= -->
-      <fieldset class="mb-4">
-        <legend class="h5">Loan Details</legend>
+<h1 class="h4 mb-0">Apply for a Loan</h1>
 
-        <!-- BRANCH -->
-        <div class="mb-3">
-          <label for="branch_id" class="form-label">Select Branch</label>
-          <select id="branch_id" name="branch_id" class="form-select" required>
-            <option value="">-- Select Branch --</option>
-          </select>
-        </div>
+<a href="borrower-dashboard.html" class="btn btn-secondary btn-sm">
+Back to Dashboard
+</a>
 
-        <!-- AMOUNT -->
-        <div class="mb-3">
-          <label for="loan_amount" class="form-label">Loan Amount</label>
-          <input
-            type="number"
-            id="loan_amount"
-            name="loan_amount"
-            class="form-control"
-            required
-            min="1"
-          />
-        </div>
+</div>
 
-        <!-- PERIOD -->
-        <div class="mb-3">
-          <label for="repayment_period" class="form-label">
-            Repayment Period (months)
-          </label>
-          <input
-            type="number"
-            id="repayment_period"
-            name="repayment_period"
-            class="form-control"
-            required
-            min="1"
-          />
-        </div>
-      </fieldset>
+</header>
 
-      <!-- ================= DOCUMENT UPLOAD ================= -->
-      <fieldset class="mb-4">
-        <legend class="h5">Upload Supporting Documents</legend>
 
-        <!-- ID (REQUIRED) -->
-        <div class="mb-3">
-          <label for="id" class="form-label">
-            ID Document <span class="text-danger">*</span>
-          </label>
-          <input
-            type="file"
-            id="id"
-            name="id"
-            class="form-control"
-            accept=".pdf,.jpg,.jpeg,.png"
-            required
-          />
-        </div>
+<main class="container mt-4">
 
-        <!-- BANK STATEMENT (REQUIRED) -->
-        <div class="mb-3">
-          <label for="bank_statement" class="form-label">
-            Bank Statement <span class="text-danger">*</span>
-          </label>
-          <input
-            type="file"
-            id="bank_statement"
-            name="bank_statement"
-            class="form-control"
-            accept=".pdf,.jpg,.jpeg,.png"
-            required
-          />
-        </div>
+<form id="applyLoanForm" enctype="multipart/form-data">
 
-        <!-- PAYSLIP (OPTIONAL) -->
-        <div class="mb-3">
-          <label for="payslip" class="form-label">
-            Payslip (Optional)
-          </label>
-          <input
-            type="file"
-            id="payslip"
-            name="payslip"
-            class="form-control"
-            accept=".pdf,.jpg,.jpeg,.png"
-          />
-        </div>
+<!-- ================= LOAN DETAILS ================= -->
 
-        <small class="text-muted">
-          * ID document and bank statement are required. Payslip is optional.
-        </small>
-      </fieldset>
+<fieldset class="mb-4">
 
-      <!-- SUBMIT -->
-      <button type="submit" class="btn btn-primary">
-        Submit Loan Application
-      </button>
+<legend class="h5">Loan Details</legend>
 
-    </form>
-  </main>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- BRANCH -->
 
-  <!-- Loan JS -->
-  <script src="../public/js/loan.js"></script>
+<div class="mb-3">
+
+<label for="branch_id" class="form-label">Select Branch</label>
+
+<select
+id="branch_id"
+name="branch_id"
+class="form-select"
+title="Select the branch you want to apply to"
+required
+>
+
+<option value="">-- Select Branch --</option>
+
+</select>
+
+</div>
+
+
+<!-- LOAN AMOUNT -->
+
+<div class="mb-3">
+
+<label for="loan_amount" class="form-label">Loan Amount</label>
+
+<input
+type="number"
+id="loan_amount"
+name="loan_amount"
+class="form-control"
+placeholder="Enter loan amount"
+title="Enter the amount you want to borrow"
+required
+min="500"
+/>
+
+<small class="text-danger fw-bold">
+
+Loans below <b>R3000</b> are repaid in <b>3 months</b>.  
+Loans <b>R3000 and above</b> are repaid in <b>6 months</b>.
+
+</small>
+
+</div>
+
+
+<!-- AUTO REPAYMENT -->
+
+<div class="mb-3">
+
+<label for="repayment_period" class="form-label">Repayment Period</label>
+
+<input
+type="text"
+id="repayment_period"
+name="repayment_period_display"
+class="form-control"
+placeholder="Repayment period will be calculated automatically"
+title="Repayment period automatically calculated"
+readonly
+/>
+
+</div>
+
+</fieldset>
+
+
+
+<!-- ================= DOCUMENTS ================= -->
+
+<fieldset class="mb-4">
+
+<legend class="h5">Upload Required Documents</legend>
+
+<p class="text-danger fw-bold">
+
+The following documents are required for verification.  
+Failure to upload valid documents will result in **loan rejection**.
+
+</p>
+
+
+<!-- ID -->
+
+<div class="mb-3">
+
+<label for="id" class="form-label">
+
+ID Document <span class="text-danger">*</span>
+
+</label>
+
+<input
+type="file"
+id="id"
+name="id"
+class="form-control"
+accept=".pdf,.jpg,.jpeg,.png"
+title="Upload your identification document"
+required
+/>
+
+</div>
+
+
+<!-- BANK STATEMENT -->
+
+<div class="mb-3">
+
+<label for="bank_statement" class="form-label">
+
+Bank Statement <span class="text-danger">*</span>
+
+</label>
+
+<input
+type="file"
+id="bank_statement"
+name="bank_statement"
+class="form-control"
+accept=".pdf,.jpg,.jpeg,.png"
+title="Upload your bank statement"
+required
+/>
+
+</div>
+
+
+<!-- PAYSLIP -->
+
+<div class="mb-3">
+
+<label for="payslip" class="form-label">
+
+Payslip (Optional)
+
+</label>
+
+<input
+type="file"
+id="payslip"
+name="payslip"
+class="form-control"
+accept=".pdf,.jpg,.jpeg,.png"
+title="Upload payslip if available"
+/>
+
+</div>
+
+</fieldset>
+
+
+
+<!-- ================= TERMS ================= -->
+
+<fieldset class="mb-4">
+
+<legend class="h5">Terms and Conditions</legend>
+
+<div class="border p-3 rounded bg-light terms-box">
+
+<ul>
+
+<li>The borrower confirms that all information provided is accurate.</li>
+
+<li>Borrowers must upload valid identification and financial documents.</li>
+
+<li>Failure to submit required documents will result in automatic loan rejection.</li>
+
+<li>Loans below <b>R3000</b> must be repaid within <b>3 months</b>.</li>
+
+<li>Loans <b>R3000 and above</b> must be repaid within <b>6 months</b>.</li>
+
+<li>The borrower agrees to pay the applicable interest rate.</li>
+
+<li>Late payments may result in penalties.</li>
+
+<li>Loan approval is subject to review by a loan officer.</li>
+
+</ul>
+
+</div>
+
+
+<div class="form-check mt-3">
+
+<input
+class="form-check-input"
+type="checkbox"
+id="agreeTerms"
+name="agreeTerms"
+title="Agree to the company terms and conditions"
+required
+>
+
+<label for="agreeTerms" class="form-check-label">
+
+I agree to the Terms and Conditions of the company.
+
+</label>
+
+</div>
+
+</fieldset>
+
+
+<!-- SUBMIT -->
+
+<button
+type="submit"
+class="btn btn-primary"
+title="Submit loan application"
+>
+
+Submit Loan Application
+
+</button>
+
+</form>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../public/js/loan.js"></script>
 
 </body>
+
 </html>

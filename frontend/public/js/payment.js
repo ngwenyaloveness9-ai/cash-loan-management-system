@@ -7,6 +7,26 @@ if (!token || !user) {
   window.location.href = 'login.html';
 }
 
+// ================= GENERATE RECEIPT =================
+function generateReceipt(payment) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text("Payment Receipt", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Payment ID: ${payment.payment_id}`, 20, 40);
+  doc.text(`Loan ID: ${payment.loan_id}`, 20, 50);
+  doc.text(`Amount Paid: R ${Number(payment.amount_paid).toFixed(2)}`, 20, 60);
+  doc.text(`Payment Method: ${payment.payment_method}`, 20, 70);
+  doc.text(`Date: ${new Date(payment.payment_date).toLocaleString()}`, 20, 80);
+
+  doc.text("Thank you for your payment!", 20, 100);
+
+  doc.save(`receipt_${payment.payment_id}.pdf`);
+}
+
 // ================= LOAD PAYMENTS =================
 async function loadPayments() {
   try {
@@ -21,19 +41,29 @@ async function loadPayments() {
     table.innerHTML = '';
 
     if (!Array.isArray(payments) || payments.length === 0) {
-      table.innerHTML = `<tr><td colspan="5">No payments found</td></tr>`;
+      table.innerHTML = `<tr><td colspan="6">No payments found</td></tr>`;
       return;
     }
 
     payments.forEach(p => {
       const row = document.createElement('tr');
+
       row.innerHTML = `
         <td>${p.payment_id}</td>
         <td>${p.loan_id}</td>
         <td>R ${Number(p.amount_paid).toFixed(2)}</td>
         <td>${p.payment_method || '—'}</td>
         <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+        <td>
+          <button class="btn btn-sm btn-primary">Download</button>
+        </td>
       `;
+
+      // Attach download event
+      row.querySelector('button').addEventListener('click', () => {
+        generateReceipt(p);
+      });
+
       table.appendChild(row);
     });
 
@@ -136,9 +166,20 @@ paymentForm?.addEventListener('submit', async (e) => {
     }
 
     alert(`Payment successful via ${method.toUpperCase()} ✅`);
+
+    // ✅ AUTO DOWNLOAD RECEIPT AFTER PAYMENT
+    generateReceipt(data.payment || {
+      payment_id: Date.now(),
+      loan_id: loanId,
+      amount_paid: amount,
+      payment_method: method,
+      payment_date: new Date()
+    });
+
     paymentForm.reset();
     cardSection.style.display = 'none';
     payshapSection.style.display = 'none';
+
     loadPayments();
 
   } catch (err) {

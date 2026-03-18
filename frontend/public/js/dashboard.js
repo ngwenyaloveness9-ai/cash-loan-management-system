@@ -16,6 +16,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   globalToken = token;
 
+  // ================= SIDEBAR TOGGLE FIX =================
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebar = document.querySelector('.sidebar');
+  const main = document.querySelector('.main');
+
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', () => {
+
+      // hide/show sidebar
+      sidebar.classList.toggle('collapsed');
+
+      // expand/shrink main content
+      if (main) {
+        main.classList.toggle('sidebar-collapsed');
+      }
+
+    });
+  }
+
   // Logout
   document.getElementById('logoutBtn')?.addEventListener('click', () => {
     localStorage.clear();
@@ -279,7 +298,6 @@ async function loadBorrowerDashboard(token, user) {
 
   if (!tableBody) return;
 
-  // ✅ Show user name in welcome text
   if (welcomeText && user.full_name) {
     welcomeText.textContent = `Welcome Back, ${user.full_name}`;
   }
@@ -316,7 +334,6 @@ async function loadBorrowerDashboard(token, user) {
 
     loans.forEach(loan => {
 
-      // ✅ Safe values
       const totalPayableAmount = Number(loan.total_payable) || 0;
 
       const remainingBal =

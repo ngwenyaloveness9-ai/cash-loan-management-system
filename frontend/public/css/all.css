@@ -172,3 +172,20 @@ button[type="submit"]:hover {
     padding: 10px 14px;
   }
 }
+/* Terms and Conditions box */
+
+.terms-box{
+    max-height:200px;
+    overflow-y:auto;
+    background:#f8f9fa;
+    padding:15px;
+    border-radius:8px;
+    color:#000;          /* makes text black */
+}
+
+/* make list text clearer */
+
+.terms-box ul li{
+    color:#0d3b66;       /* dark blue text */
+    margin-bottom:8px;
+}

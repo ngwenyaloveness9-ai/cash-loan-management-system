@@ -112,6 +112,7 @@
               <th>Amount</th>
               <th>Method</th>
               <th>Date</th>
+              <th>Receipt</th> <!-- ✅ NEW COLUMN -->
             </tr>
           </thead>
           <tbody id="paymentsTable"></tbody>
@@ -122,7 +123,13 @@
 
 </main>
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ jsPDF (for receipt download) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Your JS -->
 <script src="../public/js/payment.js"></script>
 
 </body>

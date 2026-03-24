@@ -1,5 +1,4 @@
-const Payment = require('../models/Payment');
-const Loan = require('../models/loan'); // 👈 ADD THIS
+const db = require('../config/db');
 
 // ======================
 // MAKE PAYMENT
@@ -21,20 +20,33 @@ exports.makePayment = async (req, res) => {
       });
     }
 
-    // 1️⃣ Save payment
-    const paymentId = await Payment.create({
-      loan_id,
-      user_id: req.user.user_id,
-      branch_id: req.user.branch_id,
-      amount_paid,
-      payment_method,
-      reference_number
-    });
+    // Get user info from auth middleware
+    const user_id = req.user.user_id;
+    const branch_id = req.user.branch_id;
 
-    // 2️⃣ Deduct payment from loan balance
-    await Loan.applyPayment(
-      loan_id,
-      Number(amount_paid)
+    // 1️⃣ Insert payment into DB
+    const [result] = await db.query(
+      `INSERT INTO payments 
+       (loan_id, user_id, branch_id, amount_paid, payment_method, reference_number)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        loan_id,
+        user_id,
+        branch_id,
+        amount_paid,
+        payment_method || null,
+        reference_number || null
+      ]
+    );
+
+    const paymentId = result.insertId;
+
+    // 2️⃣ Update loan balance
+    await db.query(
+      `UPDATE loans 
+       SET balance = balance - ?
+       WHERE loan_id = ?`,
+      [Number(amount_paid), loan_id]
     );
 
     res.status(201).json({
@@ -49,12 +61,21 @@ exports.makePayment = async (req, res) => {
 };
 
 // ======================
-// GET PAYMENTS (unchanged)
+// GET PAYMENTS
 // ======================
 exports.getPayments = async (req, res) => {
   try {
-    const payments = await Payment.getByUser(req.user.user_id);
+    const user_id = req.user.user_id;
+
+    const [payments] = await db.query(
+      `SELECT * FROM payments 
+       WHERE user_id = ? 
+       ORDER BY payment_date DESC`,
+      [user_id]
+    );
+
     res.json(payments);
+
   } catch (err) {
     console.error('LOAD PAYMENTS ERROR:', err);
     res.status(500).json({ error: 'Server error' });

@@ -7,10 +7,12 @@ exports.register = async (req, res) => {
   try {
     const { full_name, email, password, role, branch_id } = req.body;
 
+    // Validate input
     if (!full_name || !email || !password || !role || !branch_id) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    // Check if user already exists
     const [existing] = await db.query(
       'SELECT user_id FROM users WHERE email = ?',
       [email]
@@ -20,19 +22,21 @@ exports.register = async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Insert user
     await db.query(
       `INSERT INTO users (full_name, email, password, role, branch_id)
        VALUES (?, ?, ?, ?, ?)`,
       [full_name, email, hashedPassword, role, branch_id]
     );
 
-    res.status(201).json({ message: 'User registered successfully' });
+    return res.status(201).json({ message: 'User registered successfully' });
 
   } catch (error) {
     console.error('REGISTER ERROR:', error);
-    res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -41,6 +45,11 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Find user
     const [rows] = await db.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
@@ -52,11 +61,19 @@ exports.login = async (req, res) => {
 
     const user = rows[0];
 
+    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Ensure JWT secret exists
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+
+    // Create token
     const token = jwt.sign(
       {
         user_id: user.user_id,
@@ -67,7 +84,7 @@ exports.login = async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    res.json({
+    return res.json({
       token,
       user: {
         user_id: user.user_id,
@@ -80,6 +97,6 @@ exports.login = async (req, res) => {
 
   } catch (error) {
     console.error('LOGIN ERROR:', error);
-    res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: 'Server error' });
   }
 };

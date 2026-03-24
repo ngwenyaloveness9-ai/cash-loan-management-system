@@ -14,5 +14,6 @@
             "username": "root",
             "name": "cash management"
         }
-    ]
+    ],
+    "liveServer.settings.port": 5501
 }

@@ -307,13 +307,21 @@ async function loadBorrowerDashboard(token, user) {
 
   try {
 
-    const res = await fetch(`${API_BASE}/loans`, {
+    // ✅ GET LOANS
+    const loanRes = await fetch(`${API_BASE}/loans`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    if (!res.ok) throw new Error('Failed to fetch loans');
+    if (!loanRes.ok) throw new Error('Failed to fetch loans');
 
-    const loans = await res.json();
+    const loans = await loanRes.json();
+
+    // ✅ GET PAYMENTS
+    const paymentRes = await fetch(`${API_BASE}/payments`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const payments = await paymentRes.json();
 
     tableBody.innerHTML = '';
 
@@ -336,10 +344,15 @@ async function loadBorrowerDashboard(token, user) {
 
       const totalPayableAmount = Number(loan.total_payable) || 0;
 
-      const remainingBal =
-        loan.remaining_balance !== null && loan.remaining_balance !== undefined
-          ? Number(loan.remaining_balance)
-          : totalPayableAmount;
+      // ✅ CALCULATE PAID AMOUNT FROM PAYMENTS
+      const paidAmount = payments
+        .filter(p => p.loan_id === loan.loan_id)
+        .reduce((sum, p) => sum + Number(p.amount_paid), 0);
+
+      // ✅ CALCULATE REMAINING (THIS FIXES YOUR PROBLEM)
+      let remainingBal = totalPayableAmount - paidAmount;
+
+      if (remainingBal < 0) remainingBal = 0;
 
       const monthlyInstallment =
         totalPayableAmount / Number(loan.repayment_period || 1);

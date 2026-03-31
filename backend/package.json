@@ -4,9 +4,9 @@
   "description": "A web-based cash loan management system with multi-branch support for borrowers and loan officers.",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
-  },
+  "start": "node server.js",
+  "dev": "nodemon server.js"
+},
   "engines": {
     "node": "20.x"
   },

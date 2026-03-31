@@ -8,31 +8,31 @@ const app = express();
 // ================= MIDDLEWARE =================
 app.use(cors());
 
-// ✅ Handle JSON (but allow multer multipart)
+// Handle JSON (but allow multer multipart)
 app.use((req, res, next) => {
-  if (req.is('multipart/form-data')) {
-    return next();
-  }
+  if (req.is('multipart/form-data')) return next();
   express.json()(req, res, next);
 });
 
-// ✅ Serve uploaded files publicly
+// Serve uploaded files publicly
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ Serve frontend static files (CSS, JS, images)
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve frontend static files (CSS, JS, images)
+app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
+app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
+app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 
 // ================= FRONTEND ROUTES =================
 
-// Serve homepage
+// Serve homepage (index.html in backend/pages)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'pages', 'index.html'));
+  res.sendFile(path.join(__dirname, 'pages', 'index.html'));
 });
 
 // Serve other HTML pages dynamically
 app.get('/:page', (req, res, next) => {
   const page = req.params.page;
-  res.sendFile(path.join(__dirname, 'public', 'pages', `${page}.html`), (err) => {
+  res.sendFile(path.join(__dirname, 'pages', `${page}.html`), (err) => {
     if (err) next(); // pass to API 404 handler if file doesn't exist
   });
 });

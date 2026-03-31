@@ -22,7 +22,7 @@ app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
 app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 
-// ================= API ROUTES (MUST COME FIRST) =================
+// ================= API ROUTES =================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/branches', require('./routes/branchRoutes'));
@@ -38,9 +38,45 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'pages', 'index.html'));
 });
 
-// Other pages
-app.get('/:page', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', `${req.params.page}.html`));
+// Explicit routes for each page (NO conflicts)
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'login.html'));
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'register.html'));
+});
+
+app.get('/branches', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'branches.html'));
+});
+
+app.get('/payments', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'payments.html'));
+});
+
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'profile.html'));
+});
+
+app.get('/borrower-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'borrower-dashboard.html'));
+});
+
+app.get('/officer-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'officer-dashboard.html'));
+});
+
+app.get('/loan-documents', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'loan-documents.html'));
+});
+
+app.get('/apply-loan', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'apply-loan.html'));
+});
+
+app.get('/reports', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'reports.html'));
 });
 
 // ================= 404 =================

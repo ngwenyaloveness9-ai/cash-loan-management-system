@@ -14,43 +14,38 @@ app.use((req, res, next) => {
   express.json()(req, res, next);
 });
 
-// Serve uploaded files publicly
+// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve frontend static files (CSS, JS, images)
+// Serve static frontend (CSS, JS, images)
 app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
 app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
 app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
 
-// ================= FRONTEND ROUTES =================
-
-// Serve homepage (index.html in backend/pages)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pages', 'index.html'));
-});
-
-// Serve other HTML pages dynamically
-app.get('/:page', (req, res, next) => {
-  const page = req.params.page;
-  res.sendFile(path.join(__dirname, 'pages', `${page}.html`), (err) => {
-    if (err) next(); // pass to API 404 handler if file doesn't exist
-  });
-});
-
-// ================= API ROUTES =================
+// ================= API ROUTES (MUST COME FIRST) =================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/branches', require('./routes/branchRoutes'));
 app.use('/api/loans', require('./routes/loanRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
-
-// Mount document routes only once
 app.use('/api', require('./routes/documentRoutes'));
 
-// ================= 404 HANDLER =================
+// ================= FRONTEND ROUTES =================
+
+// Homepage
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', 'index.html'));
+});
+
+// Other pages
+app.get('/:page', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pages', `${req.params.page}.html`));
+});
+
+// ================= 404 =================
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).send("Page not found");
 });
 
 module.exports = app;

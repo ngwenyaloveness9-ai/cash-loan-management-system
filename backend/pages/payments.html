@@ -11,7 +11,8 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/public/css/all.css">
+  <!-- Fixed CSS -->
+  <link rel="stylesheet" href="/css/all.css">
 
   <!-- Custom CSS -->
   <style>
@@ -25,7 +26,7 @@
 
 <header class="bg-success text-white p-3 d-flex justify-content-between align-items-center">
   <h1 class="h4 mb-0">Loan Payments</h1>
-  <a href="borrower-dashboard.html" class="btn btn-light btn-sm">
+  <a href="/borrower-dashboard" class="btn btn-light btn-sm">
     Dashboard
   </a>
 </header>
@@ -112,7 +113,7 @@
               <th>Amount</th>
               <th>Method</th>
               <th>Date</th>
-              <th>Receipt</th> <!-- ✅ NEW COLUMN -->
+              <th>Receipt</th>
             </tr>
           </thead>
           <tbody id="paymentsTable"></tbody>
@@ -126,11 +127,11 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- ✅ jsPDF (for receipt download) -->
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- Your JS -->
-<script src="/public/js/payment.js"></script>
+<!-- Fixed JS -->
+<script src="/js/payment.js"></script>
 
 </body>
 </html>
